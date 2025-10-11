@@ -1,7 +1,11 @@
-# CloudCollab: Collaborative Task Management Platform
-### Project Proposal (Due: October 20, 2025)
+# Team Members
 
----
+| Name       | Student ID |
+| ---------- | ---------- |
+| Xingda Jiang  | 1007170525 |
+| Xiao Sun | 1005975090 |
+| Wenxuan Wang | 1004975927 |
+| Yu Zhang | 1002935229 |
 
 ## 1. Motivation
 
