@@ -9,24 +9,28 @@
 
 ## 1. Motivation
 
-In modern team-based environments, small groups often face challenges in managing tasks efficiently without relying on complex or paid solutions like Jira or Trello. While these tools provide robust functionality, they are typically designed for large organizations and are not optimized for lightweight, self-hosted deployment.
+### Identifying the Problem  
+Small teams such as student project groups, research labs, or startups often struggle to manage tasks efficiently. They rely on spreadsheets, chat tools, or free tiers of enterprise platforms like **Jira**, **Trello**, or **Asana**, which are expensive, complex, and unsuitable for lightweight collaboration.  
+These teams need a simple, reliable, and self-deployable solution that enables real-time coordination and preserves full control over their data.
 
-Our project, **CloudCollab**, aims to bridge this gap by providing a **cloud-native, stateful, and self-deployable task management platform** tailored for small teams (2–20 members) such as student project groups or startups. The system will allow users to create, assign, and track tasks in real time with role-based access, persistent data, and integrated monitoring.  
+### Why This Project Is Worth Pursuing  
+**CloudCollab** aims to fill this gap by providing a **cloud-native, real-time, and self-hosted task-management platform** designed for small, agile teams.  
+The system integrates core cloud-computing concepts taught in **ECE1779**, including containerization, orchestration, persistent storage, monitoring, and automation.  
+It allows users to create, assign, and track tasks collaboratively while maintaining data persistence and reliability.  
+Beyond its technical value, the project offers hands-on experience in building scalable, stateful applications and demonstrates how cloud technologies can support practical teamwork.
 
-Unlike static task boards or temporary web tools, CloudCollab will emphasize:
-- **Persistence and state management:** Ensuring data survives container restarts or redeployments.  
-- **Real-time collaboration:** Providing immediate task updates using WebSockets.  
-- **Automation and reliability:** Using CI/CD pipelines and monitoring for high availability.  
+### Target Users  
+- **University project teams** needing transparent task coordination.  
+- **Startups or small organizations** requiring cost-efficient workflow tools.  
+- **Open-source contributors** seeking customizable and privacy-preserving platforms.
 
-### Target Users
-Our target audience includes:
-- University project teams collaborating on assignments or capstone projects.  
-- Small startups requiring lightweight task coordination without external dependencies.  
-- Any small organization that wants a self-managed and cloud-deployed task management solution.
+### Existing Solutions and Their Limitations  
+Commercial products such as Jira and Trello provide extensive features but remain ill-suited for small teams due to:  
+- **High cost** of premium subscriptions.  
+- **Vendor lock-in** that restricts deployment flexibility.  
+- **Overly complex interfaces** not tailored for small projects.  
 
-### Why This Project Is Worth Pursuing
-This project directly demonstrates key cloud computing principles — containerization, orchestration, persistent storage, monitoring, and automation — all core components of the course. It also provides a meaningful and reusable product, as the final system can be deployed and extended beyond the course.
-
+CloudCollab combines the **flexibility of self-hosting** with the **scalability of cloud infrastructure**, offering an accessible, maintainable, and technically sound alternative for real-time team collaboration.
 
 
 ## 2. Objectives and Key Features
@@ -115,48 +119,39 @@ The MVP includes:
 Advanced features such as CI/CD and automated backups enhance technical depth without overcomplicating implementation.  
 This ensures the project remains achievable within the course timeline while fully meeting all rubric requirements.
 
-
 ## 3. Tentative Plan
 
-### 3.1 Team Members and Responsibilities
+### Collaboration Strategy  
+Given the short project duration, the team will follow an **agile and collaborative workflow** focused on flexibility and continuous integration.  
+Rather than assigning rigid roles, members will rotate across functional areas while each takes temporary ownership of one technical domain. This approach ensures balanced contributions and shared understanding of the full system.
 
-| Member | Role | Responsibilities |
-|---------|------|------------------|
-| **Member A** | Backend Developer | Design and implement REST APIs, database schema, authentication, and WebSocket endpoints. |
-| **Member B** | Frontend Developer | Build the React interface, implement real-time updates, and manage task board UI/UX. |
-| **Member C** | DevOps Engineer | Configure Docker Compose and Docker Swarm; handle deployment and persistent volumes. |
-| **Member D** | Infrastructure & QA Lead | Set up monitoring, CI/CD pipeline, database backup, and final documentation/video demo. |
+### Technical Focus Areas  
 
+- **Backend Development**  
+  Implement RESTful APIs and WebSocket endpoints using Node.js and Express.  
+  Design the PostgreSQL schema, handle authentication and authorization, and maintain secure, modular data exchange between backend and frontend.
 
-### 3.2 Development Timeline
+- **Frontend Development**  
+  Build an intuitive React interface for viewing, creating, and updating tasks in real time.  
+  Integrate WebSocket communication for live updates and ensure responsive, user-friendly interaction.
 
-| Phase | Dates | Deliverables |
-|--------|--------|--------------|
-| **Phase 1** | Oct 8 – Oct 20 | Local prototype with Docker Compose (API + DB + UI). Submit project proposal. |
-| **Phase 2** | Oct 21 – Nov 3 | Deploy to DigitalOcean using Docker Swarm with persistent storage and HTTPS. |
-| **Phase 3** | Nov 4 – Nov 17 | Implement WebSocket real-time collaboration and CI/CD pipeline. |
-| **Phase 4** | Nov 18 – Nov 24 | Prepare presentation demo; finalize monitoring dashboard and backup system. |
-| **Phase 5** | Nov 25 – Dec 8 | Polish code, documentation, and record final video demo for submission. |
+- **DevOps and Deployment**  
+  Containerize all services using Docker and orchestrate them with Docker Swarm.  
+  Deploy to DigitalOcean with persistent storage volumes and HTTPS configuration for secure access and scalability.
 
-### 3.3 Expected Outcomes
+- **Infrastructure, Automation, and Quality Assurance**  
+  Set up CI/CD pipelines via GitHub Actions, implement monitoring and alerting with DigitalOcean metrics, and automate PostgreSQL backups.  
+  Conduct integration testing and maintain technical documentation for reproducibility.
 
-By the final deadline, CloudCollab will deliver:
-- A fully functional, **stateful task management platform** hosted on DigitalOcean.  
-- Real-time updates and monitoring with persistent data storage.  
-- Automated CI/CD pipeline ensuring continuous delivery.  
-- A professional README, reproducible setup, and demonstration video.  
+### Development Process  
+- **Version Control:** Use GitHub with feature branches and pull requests for code review and collaboration.  
+- **Continuous Integration:** Automated build and test pipelines ensure reliable deployments.  
+- **Communication:** Coordinate through GitHub Discussions and weekly team check-ins to track progress and address blockers.  
+- **Quality Assurance:** Enforce peer review for major updates to maintain consistent coding standards.  
+- **Documentation:** Keep setup, deployment, and troubleshooting instructions current in the project’s README and Wiki.  
 
-
-### 3.4 Feasibility and Risk Mitigation
-
-| Potential Risk | Mitigation Strategy |
-|-----------------|---------------------|
-| WebSocket synchronization issues | Start with REST-based polling and upgrade to WebSocket once core CRUD works. |
-| Orchestration complexity | Begin with Docker Compose → scale to Swarm incrementally. |
-| CI/CD configuration errors | Use test environment before enabling auto-deploy on production. |
-| Data loss | Nightly database backups + manual restore script. |
-| Time constraints | Parallelize workstreams: backend & frontend; DevOps in parallel. |
-
+This modular and collaborative process enables steady progress, efficient testing, and seamless integration.  
+By focusing on technical depth rather than breadth, the team can deliver a **robust, stateful, and cloud-native platform** within the course timeline.
 
 ## 4. Alignment with Course Learning Objectives
 
