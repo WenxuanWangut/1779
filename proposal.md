@@ -172,16 +172,3 @@ This project is designed to showcase complete mastery of course concepts:
 It offers real-world relevance, full alignment with the course rubric, and strong technical depth for a 4-person team.  
 
 By focusing on a well-scoped, stateful, and collaborative system, the project will showcase our team’s ability to design, build, deploy, and maintain an end-to-end application in a cloud environment with robust persistence and monitoring.
-
-
-### Team Members
-- Member A  
-- Member B  
-- Member C  
-- Member D  
-
-**Deployment Provider:** DigitalOcean  
-**Orchestration Approach:** Docker Swarm  
-**Advanced Features:** WebSocket, CI/CD Pipeline, Automated Backup  
-**Repository:** (To be provided upon final submission)
-
