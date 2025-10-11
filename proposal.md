@@ -27,7 +27,7 @@ Our target audience includes:
 ### Why This Project Is Worth Pursuing
 This project directly demonstrates key cloud computing principles — containerization, orchestration, persistent storage, monitoring, and automation — all core components of the course. It also provides a meaningful and reusable product, as the final system can be deployed and extended beyond the course.
 
----
+
 
 ## 2. Objectives and Key Features
 
@@ -40,7 +40,7 @@ The objective of **CloudCollab** is to build and deploy a **stateful, cloud-nati
 
 This project demonstrates mastery of all required technical components, ensuring strong alignment with course objectives and marking rubrics.
 
----
+
 
 ### 2.2 Core Technical Features
 
@@ -52,7 +52,7 @@ This project demonstrates mastery of all required technical components, ensuring
 | **Orchestration** | **Docker Swarm** will be used for clustering, service replication, and load balancing. This approach enables multi-node scalability and fault tolerance. |
 | **Monitoring and Observability** | DigitalOcean’s monitoring tools will be configured to track CPU, memory, disk usage, and HTTP metrics. Alerts will be triggered for resource thresholds (e.g., CPU > 80%, disk > 80%). |
 
----
+
 
 ### 2.3 Advanced Features (at least two)
 
@@ -62,7 +62,7 @@ This project demonstrates mastery of all required technical components, ensuring
 | **2. CI/CD Pipeline (GitHub Actions)** | Continuous Integration and Deployment will be implemented with GitHub Actions. On every `push` to the main branch, the workflow will: build Docker images, push them to the registry, and redeploy the updated stack on DigitalOcean. |
 | **3. Automated Backup & Recovery (Bonus Feature)** | Daily PostgreSQL backups will be scheduled via `cron` and stored in DigitalOcean Spaces. A one-click restore script will be provided for data recovery, improving reliability and demonstrating operational automation. |
 
----
+
 
 ### 2.4 Security and Authentication
 
@@ -71,7 +71,7 @@ This project demonstrates mastery of all required technical components, ensuring
 - **Secrets Management:** Docker Swarm Secrets will store sensitive data (JWT keys, DB credentials).  
 - **Secure Communication:** All services exposed publicly will use HTTPS via Caddy or Nginx reverse proxy.  
 
----
+
 
 ### 2.5 Database Schema Overview
 
@@ -87,7 +87,7 @@ This project demonstrates mastery of all required technical components, ensuring
 
 All tables will include timestamps and foreign key relationships to enforce data integrity.
 
----
+
 
 ### 2.6 System Architecture
 
@@ -102,7 +102,6 @@ All tables will include timestamps and foreign key relationships to enforce data
 [Monitoring & Alerts (CPU, Disk, Memory)]
 
 
----
 
 ### 2.7 Project Feasibility and Scope
 
@@ -116,7 +115,6 @@ The MVP includes:
 Advanced features such as CI/CD and automated backups enhance technical depth without overcomplicating implementation.  
 This ensures the project remains achievable within the course timeline while fully meeting all rubric requirements.
 
----
 
 ## 3. Tentative Plan
 
@@ -129,7 +127,6 @@ This ensures the project remains achievable within the course timeline while ful
 | **Member C** | DevOps Engineer | Configure Docker Compose and Docker Swarm; handle deployment and persistent volumes. |
 | **Member D** | Infrastructure & QA Lead | Set up monitoring, CI/CD pipeline, database backup, and final documentation/video demo. |
 
----
 
 ### 3.2 Development Timeline
 
@@ -141,8 +138,6 @@ This ensures the project remains achievable within the course timeline while ful
 | **Phase 4** | Nov 18 – Nov 24 | Prepare presentation demo; finalize monitoring dashboard and backup system. |
 | **Phase 5** | Nov 25 – Dec 8 | Polish code, documentation, and record final video demo for submission. |
 
----
-
 ### 3.3 Expected Outcomes
 
 By the final deadline, CloudCollab will deliver:
@@ -151,7 +146,6 @@ By the final deadline, CloudCollab will deliver:
 - Automated CI/CD pipeline ensuring continuous delivery.  
 - A professional README, reproducible setup, and demonstration video.  
 
----
 
 ### 3.4 Feasibility and Risk Mitigation
 
@@ -163,7 +157,6 @@ By the final deadline, CloudCollab will deliver:
 | Data loss | Nightly database backups + manual restore script. |
 | Time constraints | Parallelize workstreams: backend & frontend; DevOps in parallel. |
 
----
 
 ## 4. Alignment with Course Learning Objectives
 
@@ -177,7 +170,6 @@ This project is designed to showcase complete mastery of course concepts:
 | **Monitoring & Observability** | Platform metrics and alert rules configured in DigitalOcean. |
 | **Advanced Cloud Features** | CI/CD automation and WebSocket real-time updates. |
 
----
 
 ## 5. Conclusion
 
@@ -186,7 +178,6 @@ It offers real-world relevance, full alignment with the course rubric, and stron
 
 By focusing on a well-scoped, stateful, and collaborative system, the project will showcase our team’s ability to design, build, deploy, and maintain an end-to-end application in a cloud environment with robust persistence and monitoring.
 
----
 
 ### Team Members
 - Member A  
@@ -199,4 +190,3 @@ By focusing on a well-scoped, stateful, and collaborative system, the project wi
 **Advanced Features:** WebSocket, CI/CD Pipeline, Automated Backup  
 **Repository:** (To be provided upon final submission)
 
----
