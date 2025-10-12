@@ -30,94 +30,59 @@ Commercial products such as Jira and Trello provide extensive features but remai
 - **Vendor lock-in** that restricts deployment flexibility.  
 - **Overly complex interfaces** not tailored for small projects.  
 
-CloudCollab combines the **flexibility of self-hosting** with the **scalability of cloud infrastructure**, offering an accessible, maintainable, and technically sound alternative for real-time team collaboration.
+CloudCollab combines the **flexibility of self-hosting** with the **scalability of cloud infrastructure**, offering an accessible, 
+maintainable, and technically sound alternative for real-time team collaboration.
 
+## 2. Objective and Key Features
 
-## 2. Objectives and Key Features
+### Objectives
+Build and deploy **CloudCollab**, a stateful cloud-native web app for multi-user collaboration with real-time updates and durable data using Docker, 
+Docker Swarm on DigitalOcean, PostgreSQL with persistent storage, and provider monitoring. Include at least two advanced features to meet course requirements.
 
-### 2.1 Objectives
-The objective of **CloudCollab** is to build and deploy a **stateful, cloud-native web application** that supports:
-- Multi-user collaboration with role-based access control.
-- Real-time task updates and persistent data.
-- Full containerization and orchestration using Docker Swarm on DigitalOcean.
-- Automated monitoring and CI/CD for continuous deployment and reliability.
+### Core Features
 
-This project demonstrates mastery of all required technical components, ensuring strong alignment with course objectives and marking rubrics.
+#### Orchestration
+Use **Docker Swarm** with replicated services, rolling updates, load balancing, overlay networks, and Swarm Secrets.
+Compose files are deployed as a Swarm stack for multi-node scalability and fault tolerance.
 
+#### Data & Storage
+PostgreSQL is the system of record with persistent **DigitalOcean Volumes** bound to named Swarm volumes.
+Schema managed via migrations; nightly logical backups enable recovery.
 
+| Table | Key Columns | Purpose |
+|---|---|---|
+| users | id, email, password_hash, created_at | Accounts |
+| teams | id, name, created_at | Groups |
+| team_members | team_id, user_id, role | RBAC |
+| projects | id, team_id, name | Project meta |
+| tasks | id, project_id, title, status, assignee_id, due_date | Work items |
+| comments | id, task_id, author_id, content, created_at | Discussions |
+| activity_logs | id, team_id, actor_id, type, payload, created_at | Audit trail |
 
-### 2.2 Core Technical Features
+#### Deployment
+Deploy on **DigitalOcean**: 2–3 Droplets (managers/workers) plus Block Storage volumes. Images are built and pushed to a registry; stack updates via Swarm. Public ingress served by Caddy/Nginx with HTTPS.
 
-| Requirement | Implementation |
-|--------------|----------------|
-| **Containerization and Local Development** | Each component (frontend, backend, PostgreSQL) will be containerized using Docker. A `docker-compose.yml` file will enable local multi-container development. |
-| **State Management and Persistence** | Task and user data will be stored in **PostgreSQL**, with data directories mounted on **DigitalOcean Volumes** to survive container restarts and redeployments. |
-| **Deployment Provider** | The platform will be deployed on **DigitalOcean** using Droplets and managed Volumes. |
-| **Orchestration** | **Docker Swarm** will be used for clustering, service replication, and load balancing. This approach enables multi-node scalability and fault tolerance. |
-| **Monitoring and Observability** | DigitalOcean’s monitoring tools will be configured to track CPU, memory, disk usage, and HTTP metrics. Alerts will be triggered for resource thresholds (e.g., CPU > 80%, disk > 80%). |
+#### Monitoring
+Enable **DigitalOcean metrics/alerts** for CPU, memory, disk, and network; collect logs from containers.
+Threshold alerts (e.g., CPU>80%, disk>80%) notify maintainers; dashboards track app health.
 
+#### Advanced
+1) **Real-time updates** with Socket.IO for live task boards  
+2) **CI/CD** via GitHub Actions to build, push images, and redeploy the Swarm stack on push to `main`  
+3) **Backup & recovery**: nightly `pg_dump` to DigitalOcean Spaces with one-command restore
 
+### Requirements Fit
+- Containerization & Compose: Dockerized services with local `docker-compose` for dev  
+- State Management: PostgreSQL + DO Volumes for durability  
+- Orchestration: Swarm replication, rolling updates, and load balancing  
+- Deployment Provider: DigitalOcean Droplets and Volumes  
+- Monitoring: Provider metrics, alerts, and logs  
+- Advanced Features: Real-time collaboration and CI/CD (plus backups)
 
-### 2.3 Advanced Features (at least two)
-
-| Feature | Description |
-|----------|--------------|
-| **1. Real-time Collaboration (WebSockets)** | Using Socket.IO, all team members connected to the same project will receive immediate updates when tasks are created, modified, or reassigned. This ensures a live, synchronized task board without manual refreshes. |
-| **2. CI/CD Pipeline (GitHub Actions)** | Continuous Integration and Deployment will be implemented with GitHub Actions. On every `push` to the main branch, the workflow will: build Docker images, push them to the registry, and redeploy the updated stack on DigitalOcean. |
-| **3. Automated Backup & Recovery (Bonus Feature)** | Daily PostgreSQL backups will be scheduled via `cron` and stored in DigitalOcean Spaces. A one-click restore script will be provided for data recovery, improving reliability and demonstrating operational automation. |
-
-
-
-### 2.4 Security and Authentication
-
-- **Authentication:** JWT-based authentication with access and refresh tokens.  
-- **Authorization:** Role-based access control (Admin, Member).  
-- **Secrets Management:** Docker Swarm Secrets will store sensitive data (JWT keys, DB credentials).  
-- **Secure Communication:** All services exposed publicly will use HTTPS via Caddy or Nginx reverse proxy.  
-
-
-
-### 2.5 Database Schema Overview
-
-| Table | Key Columns | Description |
-|--------|--------------|-------------|
-| `users` | `id, email, password_hash, created_at` | Stores registered user accounts. |
-| `teams` | `id, name, created_at` | Represents collaboration groups. |
-| `team_members` | `team_id, user_id, role` | Defines membership and access roles. |
-| `projects` | `id, team_id, name, description` | Holds project-level information. |
-| `tasks` | `id, project_id, title, description, status, assignee_id, due_date` | Tracks tasks assigned to members. |
-| `comments` | `id, task_id, author_id, content, created_at` | Stores task-level discussion threads. |
-| `activity_logs` | `id, team_id, actor_id, type, payload, created_at` | Tracks system and user activities for observability. |
-
-All tables will include timestamps and foreign key relationships to enforce data integrity.
-
-
-
-### 2.6 System Architecture
-
-[Frontend (React)] <--REST & WebSocket--> [Backend API (Node.js/Express)]
-|
-[PostgreSQL Database]
-|
-[DigitalOcean Volumes - Persistent Storage]
-|
-[Docker Swarm Cluster - Replicated Services]
-|
-[Monitoring & Alerts (CPU, Disk, Memory)]
-
-
-
-### 2.7 Project Feasibility and Scope
-
-The system focuses on **collaboration, persistence, and reliability** within a manageable scope.  
-The MVP includes:
-- User authentication  
-- Task creation and updates  
-- Real-time task synchronization  
-- Persistent PostgreSQL storage  
-
-Advanced features such as CI/CD and automated backups enhance technical depth without overcomplicating implementation.  
-This ensures the project remains achievable within the course timeline while fully meeting all rubric requirements.
+### Scope & Feasibility
+MVP within the timeline: authentication, task CRUD, teams/projects, real-time updates, persistent PostgreSQL.
+Swarm on DO keeps ops manageable for a 2–4 person team; CI/CD and backups add depth without excessive complexity.
+This plan satisfies all core requirements and includes at least two advanced features.
 
 ## 3. Tentative Plan
 
