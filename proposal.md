@@ -67,7 +67,7 @@ For real world apps(not for this course) where the load might be significantly h
 PostgreSQL is chosen on the database layer with persistent **DigitalOcean Volumes** bound to named Swarm volumes.
 Schema managed via migrations; nightly logical backups enable recovery.
 
-![ERD.png](./ERD.png)
+![Imgur](https://imgur.com/MJXz68H)
 
 ### Infra / Ops considerations
 
