@@ -49,7 +49,7 @@ For the purpose of this course, a simple setup is suggested:
 - Deploy backend monolith on kubernetes to auto-scale based on CPU/RAM
 
 
-![system.png](./system.png)
+![system.png](https://imgur.com/XTKDi5m.png)
 
 #### Future suggestion
 For real world apps(not for this course) where the load might be significantly higher, a few enhancements can be added:
@@ -62,12 +62,12 @@ For real world apps(not for this course) where the load might be significantly h
   - Audit trails will have most R/W loads, but no complex queries are needed and consistency requirement is the lowest. This is well suited for a NOSQL DB such as Cassandra.
 - Websocket updates from notification service should be kept in kafka for load concerns, and also to handle traffic spikes and retries.
 
-![system.png](./scaled_system.png)
+![system.png](https://imgur.com/SjaGhRl.png)
 ### Data & Storage
 PostgreSQL is chosen on the database layer with persistent **DigitalOcean Volumes** bound to named Swarm volumes.
 Schema managed via migrations; nightly logical backups enable recovery.
 
-![Imgur](https://imgur.com/MJXz68H)
+![ERD](https://imgur.com/MJXz68H.png)
 
 ### Infra / Ops considerations
 
