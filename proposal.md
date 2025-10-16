@@ -39,25 +39,47 @@ maintainable, and technically sound alternative for real-time team collaboration
 Build and deploy **CloudCollab**, a stateful cloud-native web app for multi-user collaboration with real-time updates and durable data using Docker, 
 Docker Swarm on DigitalOcean, PostgreSQL with persistent storage, and provider monitoring. Include at least two advanced features to meet course requirements.
 
-### Core Features
+### Overall Architecture
+
+#### Initial setup
+For the purpose of this course, a simple setup is suggested:
+- The backend layer will be a monolith written in **python django** for ease of bootstrapping.
+- We will use Postgresql as the storage layer for its easy setup.
+- There will be websocket connections established between the Web app and the backend for reactive updates.
+- Deploy backend monolith on kubernetes to auto-scale based on CPU/RAM
+
+<p align="center">
+<img src="https://imgur.com/XTKDi5m.png" alt="design" width="500"/>
+</p>
+
+#### Future suggestion
+For real world apps(not for this course) where the load might be significantly higher, a few enhancements can be added:
+- There should be a central gateway service that handles request routing and potentially rate limiting
+- CRUD for more stationary data can be handled in a management service, which can take less resources.
+- CRUD for tasks will be the bottleneck and can be separated into a different service for stateless scaling
+- DB considerations:
+  - More stationary data can be put into regular postgres
+  - Tasks and comments have mid-level traffic and can be sharded based on task_id
+  - Audit trails will have most R/W loads, but no complex queries are needed and consistency requirement is the lowest. This is well suited for a NOSQL DB such as Cassandra.
+- Websocket updates from notification service should be kept in kafka for load concerns, and also to handle traffic spikes and retries.
+
+<p align="center">
+<img src="https://imgur.com/SjaGhRl.png" alt="design" width="600"/>
+</p>
+
+### Data & Storage
+PostgreSQL is chosen on the database layer with persistent **DigitalOcean Volumes** bound to named Swarm volumes.
+Schema managed via migrations; nightly logical backups enable recovery.
+
+<p align="center">
+<img src="https://imgur.com/MJXz68H.png" alt="erd" width="600"/>
+</p>
+
+### Infra / Ops considerations
 
 #### Orchestration
 Use **Docker Swarm** with replicated services, rolling updates, load balancing, overlay networks, and Swarm Secrets.
 Compose files are deployed as a Swarm stack for multi-node scalability and fault tolerance.
-
-#### Data & Storage
-PostgreSQL is the system of record with persistent **DigitalOcean Volumes** bound to named Swarm volumes.
-Schema managed via migrations; nightly logical backups enable recovery.
-
-| Table | Key Columns | Purpose |
-|---|---|---|
-| users | id, email, password_hash, created_at | Accounts |
-| teams | id, name, created_at | Groups |
-| team_members | team_id, user_id, role | RBAC |
-| projects | id, team_id, name | Project meta |
-| tasks | id, project_id, title, status, assignee_id, due_date | Work items |
-| comments | id, task_id, author_id, content, created_at | Discussions |
-| activity_logs | id, team_id, actor_id, type, payload, created_at | Audit trail |
 
 #### Deployment
 Deploy on **DigitalOcean**: 2–3 Droplets (managers/workers) plus Block Storage volumes. Images are built and pushed to a registry; stack updates via Swarm. Public ingress served by Caddy/Nginx with HTTPS.
@@ -93,7 +115,7 @@ Rather than assigning rigid roles, members will rotate across functional areas w
 ### Technical Focus Areas  
 
 - **Backend Development**  
-  Implement RESTful APIs and WebSocket endpoints using Node.js and Express.  
+  Implement RESTful APIs and WebSocket endpoints using Python Django.  
   Design the PostgreSQL schema, handle authentication and authorization, and maintain secure, modular data exchange between backend and frontend.
 
 - **Frontend Development**  
