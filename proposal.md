@@ -74,6 +74,7 @@ Schema managed via migrations; nightly logical backups enable recovery.
 <p align="center">
 <img src="https://imgur.com/MJXz68H.png" alt="erd" width="600"/>
 </p>
+
 ### Infra / Ops considerations
 
 #### Orchestration
