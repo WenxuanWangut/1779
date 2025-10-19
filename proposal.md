@@ -108,37 +108,42 @@ This plan satisfies all core requirements and includes at least two advanced fea
 
 ## 3. Tentative Plan
 
-### Collaboration Strategy  
-Given the short project duration, the team will follow an **agile and collaborative workflow** focused on flexibility and continuous integration.  
-Rather than assigning rigid roles, members will rotate across functional areas while each takes temporary ownership of one technical domain. This approach ensures balanced contributions and shared understanding of the full system.
+### Overall Approach  
+To complete **CloudCollab** within the short project timeline, our team will follow an **iterative and collaborative workflow** that balances parallel development with frequent integration.  
+We plan to progress from a functional prototype to a production-ready deployment in a few weeks through agile cycles of design, implementation, testing, and refinement.  
+Each member will take primary responsibility for one technical area while contributing collaboratively across others to ensure consistent progress and knowledge sharing.
 
-### Technical Focus Areas  
+### Team Responsibilities  
 
-- **Backend Development**  
-  Implement RESTful APIs and WebSocket endpoints using Python Django.  
-  Design the PostgreSQL schema, handle authentication and authorization, and maintain secure, modular data exchange between backend and frontend.
+- **Xingda Jiang – Backend Development Lead**  
+  Designs and implements the backend API using Node.js and Express.  
+  Responsible for defining database schemas, managing authentication and authorization, and building WebSocket endpoints for real-time updates.  
+  Coordinates closely with the frontend developer to align data structures and ensure stable API integration.
 
-- **Frontend Development**  
-  Build an intuitive React interface for viewing, creating, and updating tasks in real time.  
-  Integrate WebSocket communication for live updates and ensure responsive, user-friendly interaction.
+- **Xiao Sun – Frontend Development Lead**  
+  Builds the user interface in React, focusing on usability and responsiveness.  
+  Implements real-time task updates via WebSockets and integrates frontend components with backend APIs.  
+  Ensures that UI design follows a consistent style and supports clear task visualization for team collaboration.
 
-- **DevOps and Deployment**  
-  Containerize all services using Docker and orchestrate them with Docker Swarm.  
-  Deploy to DigitalOcean with persistent storage volumes and HTTPS configuration for secure access and scalability.
+- **Wenxuan Wang – DevOps & Deployment Lead**  
+  Oversees containerization and orchestration using Docker and Docker Swarm.  
+  Configures persistent storage with DigitalOcean Volumes and manages secure HTTPS deployment.  
+  Ensures smooth integration between development and production environments.
 
-- **Infrastructure, Automation, and Quality Assurance**  
-  Set up CI/CD pipelines via GitHub Actions, implement monitoring and alerting with DigitalOcean metrics, and automate PostgreSQL backups.  
-  Conduct integration testing and maintain technical documentation for reproducibility.
+- **Yu Zhang – Infrastructure, Automation & Quality Assurance Lead**  
+  Implements CI/CD pipelines through GitHub Actions to automate build, test, and deployment stages.  
+  Configures monitoring, logging, and alerting using DigitalOcean metrics.  
+  Handles database backup scheduling, integration testing, and final documentation for reproducibility.
 
-### Development Process  
-- **Version Control:** Use GitHub with feature branches and pull requests for code review and collaboration.  
-- **Continuous Integration:** Automated build and test pipelines ensure reliable deployments.  
-- **Communication:** Coordinate through GitHub Discussions and weekly team check-ins to track progress and address blockers.  
-- **Quality Assurance:** Enforce peer review for major updates to maintain consistent coding standards.  
-- **Documentation:** Keep setup, deployment, and troubleshooting instructions current in the project’s README and Wiki.  
+### Coordination and Workflow  
 
-This modular and collaborative process enables steady progress, efficient testing, and seamless integration.  
-By focusing on technical depth rather than breadth, the team can deliver a **robust, stateful, and cloud-native platform** within the course timeline.
+- **Version Control:** All source code will be maintained in a private GitHub repository. Each feature will be developed on a separate branch and merged through reviewed pull requests.  
+- **Continuous Integration:** Every merge triggers automated builds and tests, allowing rapid feedback and stable iterations.  
+- **Communication:** Weekly coordination meetings and GitHub Discussions will be used to align priorities, resolve technical issues, and ensure smooth progress.  
+- **Testing and Review:** Each new feature will be peer-reviewed and tested in the staging environment before deployment.  
+- **Documentation:** The team will maintain a detailed `README.md` and wiki describing setup, deployment, and troubleshooting instructions.
+
+By structuring the project around specialized yet collaborative roles, the team can make steady progress each week — from local containerized development to cloud deployment, monitoring, and refinement — ultimately delivering a **fully functional, stateful, cloud-native application** within the course schedule.
 
 ## 4. Alignment with Course Learning Objectives
 
