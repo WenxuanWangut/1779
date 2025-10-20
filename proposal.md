@@ -161,6 +161,8 @@ This project is designed to showcase complete mastery of course concepts:
 ## 5. Conclusion
 
 **CloudCollab** demonstrates a practical and fully-featured cloud-native application that embodies the principles of modern DevOps and cloud architecture.  
-It offers real-world relevance, full alignment with the course rubric, and strong technical depth for a 4-person team.  
+It offers real-world relevance, full alignment with the project requirements, and strong technical depth for a 4-person team.  
 
-By focusing on a well-scoped, stateful, and collaborative system, the project will showcase our team’s ability to design, build, deploy, and maintain an end-to-end application in a cloud environment with robust persistence and monitoring.
+The project emphasizes hands-on experience with Docker Swarm, PostgreSQL persistence, and CI/CD automation. Its modular architecture also allows future incremental expansion beyond the initial implementation.
+
+By focusing on a well-scoped, stateful, and collaborative system, this project will showcase our team’s ability to design, build, deploy, and maintain an end-to-end application in a cloud environment with robust persistence and monitoring.
