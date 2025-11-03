@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cloudcollab-ingress
+  namespace: cloudcollab
+  annotations:
+    nginx.ingress.k8s.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cloudcollab.MINIKUBE_IP.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-svc
+                port:
+                  number: 3000
