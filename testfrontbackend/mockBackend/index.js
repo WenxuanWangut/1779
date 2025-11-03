@@ -13,6 +13,6 @@ app.get("/api/healthz", (req, res) => res.send("ok"));
 app.get("/api/readyz", (req, res) => res.send("ok"));
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`listening on ${port}`);
 });
