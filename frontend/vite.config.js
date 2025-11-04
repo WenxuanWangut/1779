@@ -3,5 +3,24 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5173 }
+  server: { 
+    port: 5173,
+    // Proxy configuration for development
+    // Routes API requests to backend server
+    // Note: Proxy only matches exact API paths, not frontend routes
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_BASE || 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  },
+  // Ensure proper handling of SPA routing
+  build: {
+    rollupOptions: {
+      input: './index.html'
+    }
+  }
 })
