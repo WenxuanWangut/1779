@@ -4,7 +4,7 @@
     <option name="sdkName" value="$USER_HOME$/anaconda3" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="$USER_HOME$/anaconda3" project-jdk-type="Python SDK" />
-  <component name="ReactNativePackager" nodePath="project" workingDirectory="$PROJECT_DIR$/testfrontbackend/mockFrontend">
+  <component name="ReactNativePackager" nodePath="project" workingDirectory="$PROJECT_DIR$/frontend">
     <scripts>
       <item value="dev" />
     </scripts>

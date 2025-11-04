@@ -1,5 +1,5 @@
 import React from 'react'
-import SideNavigation, { Section, HeadingItem, NestableNavigationContent, NavigationFooter, ButtonItem } from '@atlaskit/side-navigation'
+import { SideNavigation, Section, HeadingItem, NestableNavigationContent, NavigationFooter, ButtonItem } from '@atlaskit/side-navigation'
 import { Link } from 'react-router-dom'
 
 export default function SideNav(){

@@ -8,7 +8,7 @@ import TicketDetailModal from '../components/TicketDetailModal.jsx'
 import { listTickets, createTicket, updateTicket, reorderTickets, deleteTicket } from '../api/tickets.js'
 import useSocket from '../hooks/useSocket.js'
 import useUI from '../context/UIContext.jsx'
-import { ConfirmDialog } from '../components/Dialogs.jsx'
+import ConfirmDialog from '../components/Dialogs.jsx'
 
 export default function ProjectBoard(){
   const { id } = useParams()
