@@ -1,0 +1,4 @@
+html, body, #root { height: 100%; margin: 0; }
+* { box-sizing: border-box; }
+.center { display:flex; align-items:center; justify-content:center; height:100%; }
+.page { padding: 16px; }
