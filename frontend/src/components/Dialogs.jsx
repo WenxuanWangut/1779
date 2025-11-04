@@ -4,7 +4,7 @@ import Button from '@atlaskit/button'
 import Form, { Field } from '@atlaskit/form'
 import Textfield from '@atlaskit/textfield'
 
-export default function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel, confirmLabel = 'Confirm', cancelLabel = 'Cancel', appearance = 'danger' }) {
+export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel, confirmLabel = 'Confirm', cancelLabel = 'Cancel', appearance = 'danger' }) {
   if (!isOpen) return null
 
   return (
