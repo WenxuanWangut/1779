@@ -6,8 +6,7 @@ import { Link } from 'react-router-dom'
 import SearchBar from '../components/SearchBar.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import useUI from '../context/UIContext.jsx'
-import PromptDialog from '../components/Dialogs.jsx'
-import ConfirmDialog from '../components/Dialogs.jsx'
+import { PromptDialog, ConfirmDialog } from '../components/Dialogs.jsx'
 
 export default function ProjectsList(){
   const qc = useQueryClient()
