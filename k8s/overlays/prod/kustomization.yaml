@@ -1,11 +1,14 @@
 resources:
-  - ../../k8s
+  - ../../deployment.yaml
+  - ../../service.yaml
+  - ../../frontend/deployment.yaml
+  - ../../frontend/service.yaml
 images:
   - name: app-backend
-    newName: ghcr.io/WenxuanWangut/1779/app-backend
+    newName: ghcr.io/wenxuanwangut/app-backend
     newTag: REPLACED_BY_CI
   - name: app-frontend
-    newName: ghcr.io/WenxuanWangut/1779/app-frontend
+    newName: ghcr.io/wenxuanwangut/app-frontend
     newTag: REPLACED_BY_CI
 patches:
   - path: deployment-backend-patch.yaml
