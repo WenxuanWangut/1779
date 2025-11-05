@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: app_backend/app_backend
+        working-directory: app_backend
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
@@ -65,7 +65,7 @@ jobs:
       - id: build
         uses: docker/build-push-action@v6
         with:
-          context: app_backend/app_backend
+          context: app_backend/
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
