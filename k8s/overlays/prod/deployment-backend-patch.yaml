@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-backend
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+        - name: app-backend
+          imagePullPolicy: Always

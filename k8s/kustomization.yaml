@@ -1,0 +1,12 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+images:
+  - name: app-backend
+    newName: app-backend
+    newTag: local
+  - name: app-frontend
+    newName: app-frontend
+    newTag: local

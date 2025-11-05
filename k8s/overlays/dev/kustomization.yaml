@@ -1,0 +1,13 @@
+resources:
+  - ../../k8s
+images:
+  - name: app-backend
+    newName: app-backend
+    newTag: local
+  - name: app-frontend
+    newName: app-frontend
+    newTag: local
+patches:
+  - path: deployment-backend-patch.yaml
+  - path: deployment-frontend-patch.yaml
+  - path: service-frontend-nodeport.yaml
