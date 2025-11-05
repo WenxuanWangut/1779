@@ -1,9 +1,11 @@
 # Dependencies
 frontend/node_modules
+testfrontbackend/mockFrontend/node_modules
+testfrontbackend/mockBackend/node_modules
 package-lock.json
 
 # Build outputs
-dist
+frontend/dist
 dist-ssr
 *.local
 
@@ -33,4 +35,3 @@ lerna-debug.log*
 # OS
 .DS_Store
 Thumbs.db
-
