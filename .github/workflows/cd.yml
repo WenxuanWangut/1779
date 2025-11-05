@@ -1,0 +1,149 @@
+name: cd
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_BACKEND: ghcr.io/${{ github.repository_owner }}/app-backend
+  IMAGE_FRONTEND: ghcr.io/${{ github.repository_owner }}/app-frontend
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            backend:
+              - 'app_backend/**'
+              - '.github/workflows/**'
+              - 'k8s/**'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/**'
+              - 'k8s/**'
+
+  build-push-backend:
+    needs: detect
+    if: needs.detect.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app_backend/app_backend
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_BACKEND }}
+          tags: |
+            type=sha
+            type=raw,value=latest,enable=true
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: app_backend/app_backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build-push-frontend:
+    needs: detect
+    if: needs.detect.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_FRONTEND }}
+          tags: |
+            type=sha
+            type=raw,value=latest,enable=true
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: [build-push-backend, build-push-frontend, detect]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: v5.4.1
+
+      - name: Write kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${KUBE_CONFIG_DATA}" | base64 -d > $HOME/.kube/config
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+
+      - name: Namespace
+        run: |
+          NS="${{ secrets.KUBE_NAMESPACE }}"
+          if [ -z "$NS" ]; then NS=default; fi
+          echo "KUBE_NS=$NS" >> $GITHUB_ENV
+
+      - name: Pin images by digest
+        working-directory: k8s/overlays/prod
+        run: |
+          if [ "${{ needs.detect.outputs.backend }}" = "true" ]; then
+            kustomize edit set image app-backend=${{ env.IMAGE_BACKEND }}@${{ needs.build-push-backend.outputs.digest }}
+          fi
+          if [ "${{ needs.detect.outputs.frontend }}" = "true" ]; then
+            kustomize edit set image app-frontend=${{ env.IMAGE_FRONTEND }}@${{ needs.build-push-frontend.outputs.digest }}
+          fi
+
+      - name: Apply
+        run: |
+          kubectl -n "$KUBE_NS" apply -k k8s/overlays/prod
+          kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=180s
+          kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=180s
+
+      - name: Migrate
+        run: |
+          kubectl -n "$KUBE_NS" exec deploy/app-backend -- python manage.py migrate --noinput
