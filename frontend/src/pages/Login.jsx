@@ -19,6 +19,7 @@ export default function Login(){
         <Form onSubmit={async (values) => {
           try {
             const { token } = await login(values.email, values.password)
+            localStorage.setItem('token', token)
             const profile = await me()
             setAuth(token, profile)
             pushToast('Login successful!')
