@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { me, logout as logoutAPI } from '../api/auth.js'
+import client from '../api/client'
 
 const AuthContext = createContext(null)
 
@@ -31,9 +32,17 @@ export function AuthProvider({ children }){
     loadUser()
   }, [token])
 
-  const login = async (t, u) => { 
-    setToken(t)
-    setUser(u)
+//  const login = (t, u) => { 
+//    setToken(t)
+//    setUser(u)
+//  }
+  const login = async (email, password) => {
+    const { data } = await client.post('/auth/login', { email, password })
+    // save token so the interceptor can attach it on subsequent requests
+    setToken(data.token)
+    localStorage.setItem('token', data.token)        // <-- THIS is missing on your side
+    setUser(data.user)
+    return data.user
   }
   
   const logout = async () => {
@@ -48,6 +57,12 @@ export function AuthProvider({ children }){
       localStorage.removeItem('token')
     }
   }
+
+  useEffect(() => {
+    const t = localStorage.getItem('token')
+    if (!t) return
+    client.get('/auth/me').then(r => setUser(r.data)).catch(() => logout())
+  }, [])
 
   return (
     <AuthContext.Provider value={{ token, user, setUser, login, logout, loading }}>
