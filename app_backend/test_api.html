@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token Auth API Test - Ticket Board</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .authenticated { background-color: #d4edda; color: #155724; }
+        .unauthenticated { background-color: #f8d7da; color: #721c24; }
+        .section {
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        input, select, textarea {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.danger {
+            background-color: #dc3545;
+        }
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        button.success {
+            background-color: #28a745;
+        }
+        button.success:hover {
+            background-color: #218838;
+        }
+        #log {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            background-color: #f9f9f9;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        #ticketList {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 400px;
+            overflow-y: scroll;
+            background-color: #f9f9f9;
+            margin: 20px 0;
+        }
+        .log-entry {
+            padding: 5px;
+            margin: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .log-request { color: #007bff; font-weight: bold; }
+        .log-response { color: #28a745; }
+        .log-error { color: #dc3545; }
+        .ticket-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ticket-status {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-TODO { background-color: #ffc107; color: #000; }
+        .status-IN_PROGRESS { background-color: #17a2b8; color: #fff; }
+        .status-DONE { background-color: #28a745; color: #fff; }
+        .status-WONT_DO { background-color: #6c757d; color: #fff; }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Token Authentication API Test - Ticket Board</h1>
+    
+    <div id="status" class="status unauthenticated">
+        Status: Not authenticated
+    </div>
+    <div id="tokenDisplay" style="margin: 10px 0; font-size: 12px;"></div>
+
+    <div class="container">
+        <!-- Left Column: Authentication -->
+        <div>
+            <div class="section">
+                <h2>Authentication</h2>
+                <div>
+                    <input type="text" id="email" placeholder="Email" value="alice@example.com">
+                </div>
+                <div>
+                    <input type="password" id="password" placeholder="Password" value="password123">
+                </div>
+                <div>
+                    <button class="success" onclick="login()">Login</button>
+                    <button class="danger" onclick="logout()">Logout</button>
+                </div>
+                <p style="font-size: 12px;">Quick login: 
+                    <button onclick="setUser('alice@example.com', 'password123')">Alice</button>
+                    <button onclick="setUser('bob@example.com', 'password456')">Bob</button>
+                </p>
+            </div>
+
+            <h3>API Log</h3>
+            <div id="log"></div>
+        </div>
+
+        <!-- Right Column: Tickets -->
+        <div>
+            <div class="section">
+                <h2>Create Ticket</h2>
+                <input type="text" id="newTicketName" placeholder="Ticket Name">
+                <textarea id="newTicketDescription" placeholder="Description" rows="3"></textarea>
+                <select id="newTicketStatus">
+                    <option value="TODO">TODO</option>
+                    <option value="IN_PROGRESS">IN PROGRESS</option>
+                    <option value="DONE">DONE</option>
+                    <option value="WONT_DO">WON'T DO</option>
+                </select>
+                <button class="success" onclick="createTicket()">Create Ticket</button>
+            </div>
+
+            <div class="section">
+                <h2>Update Ticket</h2>
+                <input type="number" id="updateTicketId" placeholder="Ticket ID">
+                <input type="text" id="updateTicketName" placeholder="New Name (optional)">
+                <select id="updateTicketStatus">
+                    <option value="">-- Don't Change --</option>
+                    <option value="TODO">TODO</option>
+                    <option value="IN_PROGRESS">IN PROGRESS</option>
+                    <option value="DONE">DONE</option>
+                    <option value="WONT_DO">WON'T DO</option>
+                </select>
+                <button onclick="updateTicket()">Update Ticket</button>
+            </div>
+
+            <div class="section">
+                <h2>Delete Ticket</h2>
+                <input type="number" id="deleteTicketId" placeholder="Ticket ID">
+                <button class="danger" onclick="deleteTicket()">Delete Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <h2>All Tickets</h2>
+    <button onclick="loadTickets()">Refresh Tickets</button>
+    <div id="ticketList"></div>
+
+    <script>
+        let authToken = null;
+        let currentUser = null;
+
+        function updateStatus(message, isAuthenticated) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = 'Status: ' + message;
+            statusDiv.className = 'status ' + (isAuthenticated ? 'authenticated' : 'unauthenticated');
+            
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            if (authToken) {
+                tokenDisplay.innerHTML = `<strong>Token:</strong> <code>${authToken.substring(0, 20)}...</code>`;
+            } else {
+                tokenDisplay.innerHTML = '';
+            }
+        }
+
+        function addLog(type, method, url, data = null, response = null) {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let html = `<span class="log-${type}">[${timestamp}] ${method} ${url}</span>`;
+            
+            if (data) {
+                html += `<br>Request: ${JSON.stringify(data)}`;
+            }
+            if (response) {
+                html += `<br>Response: ${JSON.stringify(response)}`;
+            }
+            
+            entry.innerHTML = html;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function setUser(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+                addLog(response.ok ? 'response' : 'error', 'POST', '/login', { email, password }, result);
+                
+                if (response.ok) {
+                    authToken = result.token;
+                    currentUser = result.user;
+                    updateStatus(`Authenticated as ${currentUser.name}`, true);
+                    loadTickets();
+                } else {
+                    alert('Login failed: ' + result.error);
+                    authToken = null;
+                    currentUser = null;
+                    updateStatus('Not authenticated', false);
+                }
+            } catch (error) {
+                addLog('error', 'POST', '/login', null, { error: error.message });
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function logout() {
+            if (!authToken) {
+                alert('Not logged in!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${authToken}`
+                    }
+                });
+
+                const result = await response.json();
+                addLog(response.ok ? 'response' : 'error', 'POST', '/logout', null, result);
+                
+                authToken = null;
+                currentUser = null;
+                updateStatus('Logged out', false);
+                document.getElementById('ticketList').innerHTML = '<p>Please login to view tickets.</p>';
+            } catch (error) {
+                addLog('error', 'POST', '/logout', null, { error: error.message });
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function loadTickets() {
+            if (!authToken) {
+                document.getElementById('ticketList').innerHTML = '<p>Please login first.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/tickets', {
+                    headers: {
+                        'Authorization': `Token ${authToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    authToken = null;
+                    currentUser = null;
+                    updateStatus('Token expired - please login again', false);
+                    alert('Your session has expired. Please login again.');
+                    return;
+                }
+
+                const tickets = await response.json();
+                addLog('response', 'GET', '/tickets', null, { count: tickets.length });
+                displayTickets(tickets);
+            } catch (error) {
+                addLog('error', 'GET', '/tickets', null, { error: error.message });
+                alert('Error loading tickets: ' + error.message);
+            }
+        }
+
+        function displayTickets(tickets) {
+            const ticketList = document.getElementById('ticketList');
+            if (tickets.length === 0) {
+                ticketList.innerHTML = '<p>No tickets found.</p>';
+                return;
+            }
+
+            ticketList.innerHTML = tickets.map(ticket => `
+                <div class="ticket-item">
+                    <div class="ticket-header">
+                        <strong>#${ticket.id} - ${ticket.name}</strong>
+                        <span class="ticket-status status-${ticket.status}">${ticket.status}</span>
+                    </div>
+                    <p>${ticket.description}</p>
+                    <small>Assignee: ${ticket.assignee ? ticket.assignee.name + ' (' + ticket.assignee.email + ')' : 'Unassigned'}</small>
+                </div>
+            `).join('');
+        }
+
+        async function createTicket() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const name = document.getElementById('newTicketName').value;
+            const description = document.getElementById('newTicketDescription').value;
+            const status = document.getElementById('newTicketStatus').value;
+
+            if (!name || !description) {
+                alert('Please enter name and description');
+                return;
+            }
+
+            try {
+                const data = { name, description, status };
+                const response = await fetch('http://localhost:8000/tickets/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Token ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                addLog(response.ok ? 'response' : 'error', 'POST', '/tickets/create', data, result);
+                
+                if (response.ok) {
+                    document.getElementById('newTicketName').value = '';
+                    document.getElementById('newTicketDescription').value = '';
+                    loadTickets();
+                } else {
+                    alert('Error: ' + (result.error || JSON.stringify(result)));
+                }
+            } catch (error) {
+                addLog('error', 'POST', '/tickets/create', null, { error: error.message });
+                alert('Error creating ticket: ' + error.message);
+            }
+        }
+
+        async function updateTicket() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const ticketId = document.getElementById('updateTicketId').value;
+            const name = document.getElementById('updateTicketName').value;
+            const status = document.getElementById('updateTicketStatus').value;
+
+            if (!ticketId) {
+                alert('Please enter ticket ID');
+                return;
+            }
+
+            const updates = {};
+            if (name) updates.name = name;
+            if (status) updates.status = status;
+
+            if (Object.keys(updates).length === 0) {
+                alert('Please provide at least one field to update');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8000/tickets/${ticketId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Token ${authToken}`
+                    },
+                    body: JSON.stringify(updates)
+                });
+
+                const result = await response.json();
+                addLog(response.ok ? 'response' : 'error', 'PATCH', `/tickets/${ticketId}`, updates, result);
+                
+                if (response.ok) {
+                    document.getElementById('updateTicketId').value = '';
+                    document.getElementById('updateTicketName').value = '';
+                    document.getElementById('updateTicketStatus').value = '';
+                    loadTickets();
+                } else {
+                    alert('Error: ' + (result.error || JSON.stringify(result)));
+                }
+            } catch (error) {
+                addLog('error', 'PATCH', `/tickets/${ticketId}`, null, { error: error.message });
+                alert('Error updating ticket: ' + error.message);
+            }
+        }
+
+        async function deleteTicket() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const ticketId = document.getElementById('deleteTicketId').value;
+
+            if (!ticketId) {
+                alert('Please enter ticket ID');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete ticket #${ticketId}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8000/tickets/${ticketId}/delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Token ${authToken}`
+                    }
+                });
+
+                const result = await response.json();
+                addLog(response.ok ? 'response' : 'error', 'DELETE', `/tickets/${ticketId}/delete`, null, result);
+                
+                if (response.ok) {
+                    document.getElementById('deleteTicketId').value = '';
+                    loadTickets();
+                } else {
+                    alert('Error: ' + (result.error || JSON.stringify(result)));
+                }
+            } catch (error) {
+                addLog('error', 'DELETE', `/tickets/${ticketId}/delete`, null, { error: error.message });
+                alert('Error deleting ticket: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+
