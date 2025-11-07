@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { me, logout as logoutAPI } from '../api/auth.js'
+import { logout as logoutAPI } from '../api/auth.js'
 import client from '../api/client'
 
 const AuthContext = createContext(null)
@@ -14,35 +14,31 @@ export function AuthProvider({ children }){
     else localStorage.removeItem('token')
   }, [token])
 
-  // Load user profile on mount if token exists
+  // Load user from localStorage on mount if token exists
+  // Note: Backend doesn't have /me endpoint, so we store user data in localStorage
   useEffect(() => {
-    const loadUser = async () => {
-      if (token) {
+    if (token) {
+      const storedUser = localStorage.getItem('user')
+      if (storedUser) {
         try {
-          const profile = await me()
-          setUser(profile)
+          setUser(JSON.parse(storedUser))
         } catch (error) {
-          // Token might be invalid, clear it
-          setToken(null)
-          localStorage.removeItem('token')
+          console.error('Failed to parse stored user:', error)
         }
       }
-      setLoading(false)
     }
-    loadUser()
+    setLoading(false)
   }, [token])
 
-//  const login = (t, u) => { 
-//    setToken(t)
-//    setUser(u)
-//  }
   const login = async (email, password) => {
-    const { data } = await client.post('/auth/login', { email, password })
-    // save token so the interceptor can attach it on subsequent requests
-    setToken(data.token)
-    localStorage.setItem('token', data.token)        // <-- THIS is missing on your side
-    setUser(data.user)
-    return data.user
+    const response = await client.post('/login', { email, password })
+    // Backend returns {token, user} directly in response.data
+    const { token: newToken, user: userData } = response.data
+    setToken(newToken)
+    setUser(userData)
+    localStorage.setItem('token', newToken)
+    localStorage.setItem('user', JSON.stringify(userData))
+    return userData
   }
   
   const logout = async () => {
@@ -55,14 +51,9 @@ export function AuthProvider({ children }){
       setToken(null)
       setUser(null)
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
     }
   }
-
-  useEffect(() => {
-    const t = localStorage.getItem('token')
-    if (!t) return
-    client.get('/auth/me').then(r => setUser(r.data)).catch(() => logout())
-  }, [])
 
   return (
     <AuthContext.Provider value={{ token, user, setUser, login, logout, loading }}>

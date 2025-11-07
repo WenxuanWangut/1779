@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import Button from '@atlaskit/button'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { listProjects, createProject, deleteProject } from '../api/projects.js'
+import { listProjects, createProject, deleteProject } from '../../api/projects.js'
 import { Link } from 'react-router-dom'
-import SearchBar from '../components/SearchBar.jsx'
-import EmptyState from '../components/EmptyState.jsx'
-import useUI from '../context/UIContext.jsx'
-import { PromptDialog, ConfirmDialog } from '../components/Dialogs.jsx'
+import SearchBar from '../../components/SearchBar.jsx'
+import EmptyState from '../../components/EmptyState.jsx'
+import useUI from '../../context/UIContext.jsx'
+import { PromptDialog, ConfirmDialog } from '../../components/Dialogs.jsx'
 
 export default function ProjectsList(){
   const qc = useQueryClient()
@@ -70,7 +70,10 @@ export default function ProjectsList(){
   return (
     <div>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center', marginBottom:12}}>
-        <SearchBar onChange={setQ} placeholder="Search projects..." />
+        <h2 style={{margin: 0}}>Projects</h2>
+        <div style={{display:'flex', gap: 8, alignItems:'center', flex: 1, maxWidth: 400, marginLeft: 16}}>
+          <SearchBar onChange={setQ} placeholder="Search projects..." />
+        </div>
         <Button onClick={() => setShowCreateDialog(true)} isLoading={createMut.isPending}>New Project</Button>
       </div>
       {filtered.length===0 ? (
@@ -130,3 +133,4 @@ export default function ProjectsList(){
     </div>
   )
 }
+

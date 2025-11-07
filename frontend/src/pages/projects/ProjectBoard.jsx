@@ -1,21 +1,19 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import Button from '@atlaskit/button'
-import TicketBoard from '../components/TicketBoard.jsx'
-import TicketModal from '../components/TicketModal.jsx'
-import TicketFilters from '../components/TicketFilters.jsx'
-import TicketDetailModal from '../components/TicketDetailModal.jsx'
-import { listTickets, createTicket, updateTicket, reorderTickets, deleteTicket } from '../api/tickets.js'
-import useSocket from '../hooks/useSocket.js'
-import useUI from '../context/UIContext.jsx'
-import { ConfirmDialog } from '../components/Dialogs.jsx'
+import TicketBoard from '../../components/TicketBoard.jsx'
+import TicketModal from '../../components/TicketModal.jsx'
+import TicketFilters from '../../components/TicketFilters.jsx'
+import { listTickets, createTicket, updateTicket, reorderTickets, deleteTicket } from '../../api/tickets.js'
+import useSocket from '../../hooks/useSocket.js'
+import useUI from '../../context/UIContext.jsx'
+import { ConfirmDialog } from '../../components/Dialogs.jsx'
 
 export default function ProjectBoard(){
   const { id } = useParams()
+  const navigate = useNavigate()
   const [tickets, setTickets] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
-  const [detailModalOpen, setDetailModalOpen] = useState(false)
-  const [selectedTicket, setSelectedTicket] = useState(null)
   const [editingTicket, setEditingTicket] = useState(null)
   const [loading, setLoading] = useState(true)
   const [socketConnected, setSocketConnected] = useState(false)
@@ -112,19 +110,7 @@ export default function ProjectBoard(){
   }
 
   function handleTicketClick(ticket){
-    setSelectedTicket(ticket)
-    setDetailModalOpen(true)
-  }
-
-  function handleEditFromDetail(ticket){
-    setDetailModalOpen(false)
-    setEditingTicket(ticket)
-    setModalOpen(true)
-  }
-
-  function handleDeleteFromDetail(ticketId){
-    setDetailModalOpen(false)
-    setDeleteDialog({ open: true, ticketId })
+    navigate(`/tickets/${ticket.id}`)
   }
 
   async function onEdit(ticket){
@@ -134,11 +120,15 @@ export default function ProjectBoard(){
 
   async function onUpdate(values){
     try {
+      // Extract status value if it's an object from Select component
+      const statusValue = typeof values.status === 'object' && values.status?.value 
+        ? values.status.value 
+        : values.status || editingTicket.status
+      
       await updateTicket(editingTicket.id, {
-        ticket_number: values.ticket_number,
-        description: values.description || '',
-        name: values.ticket_number,
-        status: values.status
+        name: values.ticket_number || editingTicket.name,
+        description: values.description || editingTicket.description || '',
+        status: statusValue
       })
       setModalOpen(false)
       setEditingTicket(null)
@@ -158,10 +148,6 @@ export default function ProjectBoard(){
       await deleteTicket(deleteDialog.ticketId)
       pushToast('Ticket deleted successfully')
       setDeleteDialog({ open: false, ticketId: null })
-      if (detailModalOpen) {
-        setDetailModalOpen(false)
-        setSelectedTicket(null)
-      }
       refresh()
     } catch (error) {
       pushToast(`Failed to delete ticket: ${error.response?.data?.message || error.message}`, 'error')
@@ -179,12 +165,16 @@ export default function ProjectBoard(){
     <div>
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12}}>
         <div>
-          <h3 style={{ margin: 0 }}>Project #{id}</h3>
-          <div style={{ fontSize: 12, color: socketConnected ? '#0E8750' : '#999', marginTop: 4 }}>
+          <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 4}}>
+            <Button appearance="subtle" onClick={() => navigate('/projects')}>← Back</Button>
+            <h3 style={{ margin: 0 }}>Project #{id}</h3>
+          </div>
+          <div style={{ fontSize: 12, color: socketConnected ? '#0E8750' : '#999', marginLeft: 40 }}>
             {socketConnected ? '● Real-time updates active' : '○ Connecting...'}
           </div>
         </div>
         <div style={{display:'flex', gap:8}}>
+          <Button appearance="subtle" onClick={() => navigate(`/projects/${id}/settings`)}>Settings</Button>
           <Button appearance="primary" onClick={()=>setModalOpen(true)}>New Ticket</Button>
         </div>
       </div>
@@ -216,16 +206,6 @@ export default function ProjectBoard(){
         onSubmit={handleModalSubmit}
         initial={editingTicket || {}}
       />
-      <TicketDetailModal
-        isOpen={detailModalOpen}
-        ticket={selectedTicket}
-        onClose={() => {
-          setDetailModalOpen(false)
-          setSelectedTicket(null)
-        }}
-        onEdit={handleEditFromDetail}
-        onDelete={handleDeleteFromDetail}
-      />
       <ConfirmDialog
         isOpen={deleteDialog.open}
         title="Delete Ticket"
@@ -238,3 +218,4 @@ export default function ProjectBoard(){
     </div>
   )
 }
+

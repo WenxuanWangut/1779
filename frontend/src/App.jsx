@@ -1,10 +1,12 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Login from './pages/Login.jsx'
-import Register from './pages/Register.jsx'
-import ProjectsList from './pages/ProjectsList.jsx'
-import ProjectBoard from './pages/ProjectBoard.jsx'
-import NotFound from './pages/NotFound.jsx'
+import Login from './pages/auth/Login.jsx'
+import Register from './pages/auth/Register.jsx'
+import MainPage from './pages/MainPage.jsx'
+import ProjectsList from './pages/projects/ProjectsList.jsx'
+import ProjectBoard from './pages/projects/ProjectBoard.jsx'
+import TicketDetail from './pages/tickets/TicketDetail.jsx'
+import NotFound from './pages/common/NotFound.jsx'
 import AppShell from './components/Navbar.jsx'
 import useAuth from './hooks/useAuth.js'
 
@@ -24,13 +26,19 @@ export default function App(){
   
   return (
     <Routes>
-      <Route path="/login" element={token ? <Navigate to="/projects" replace /> : <Login />} />
+      {/* Public routes */}
+      <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/register" element={<Register />} />
+      
+      {/* Protected routes */}
       <Route path="/" element={<PrivateRoute><AppShell /></PrivateRoute>}>
-        <Route index element={<Navigate to="/projects" replace />} />
+        <Route index element={<MainPage />} />
         <Route path="projects" element={<ProjectsList />} />
         <Route path="projects/:id" element={<ProjectBoard />} />
+        <Route path="tickets/:id" element={<TicketDetail />} />
       </Route>
+      
+      {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
