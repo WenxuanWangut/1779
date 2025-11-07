@@ -1,5 +1,6 @@
 from django.db import models
 from .user import User
+from .project import Project
 
 
 class Ticket(models.Model):
@@ -16,6 +17,11 @@ class Ticket(models.Model):
         max_length=20,
         choices=Status.choices,
         default=Status.TODO
+    )
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='tickets'
     )
     assignee = models.ForeignKey(
         User,

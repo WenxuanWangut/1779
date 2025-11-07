@@ -38,7 +38,8 @@ python3 manage.py seed_data
 
 This creates:
 - 2 test users (alice@example.com / password123, bob@example.com / password456)
-- 6 test tickets with various statuses and assignees
+- 2 test projects (ECE1779 Final Project, Personal Tasks)
+- 6 test tickets with various statuses, assignees, and projects
 
 ## Running the Application
 
@@ -118,23 +119,52 @@ GET /tickets
 Authorization: Token <token>
 ```
 
-Returns a list of all tickets with their details including assignee information.
+Returns all tickets grouped by status.
 
 **Example Response:**
 ```json
-[
-  {
-    "id": 1,
-    "name": "Setup project repository",
-    "description": "Initialize the Git repository and set up the project structure",
-    "status": "DONE",
-    "assignee": {
-      "id": "d352114a-3e73-46f5-950d-d2548835782d",
-      "email": "alice@example.com",
-      "name": "Alice Smith"
+{
+  "TODO": [
+    {
+      "id": 4,
+      "name": "Add authentication",
+      "description": "Implement user authentication and authorization",
+      "status": "TODO",
+      "assignee": {
+        "id": "uuid",
+        "email": "bob@example.com",
+        "name": "Bob Johnson"
+      }
     }
-  }
-]
+  ],
+  "IN_PROGRESS": [
+    {
+      "id": 3,
+      "name": "Implement REST API endpoints",
+      "description": "Create GET /tickets endpoint and user management APIs",
+      "status": "IN_PROGRESS",
+      "assignee": {
+        "id": "uuid",
+        "email": "alice@example.com",
+        "name": "Alice Smith"
+      }
+    }
+  ],
+  "DONE": [
+    {
+      "id": 1,
+      "name": "Setup project repository",
+      "description": "Initialize the Git repository and set up the project structure",
+      "status": "DONE",
+      "assignee": {
+        "id": "uuid",
+        "email": "alice@example.com",
+        "name": "Alice Smith"
+      }
+    }
+  ],
+  "WONT_DO": []
+}
 ```
 
 #### Create Ticket
@@ -161,12 +191,14 @@ Content-Type: application/json
 
 {
   "name": "Updated name" (optional),
+  "description": "Updated description" (optional),
   "status": "IN_PROGRESS" (optional),
+  "project_id": "uuid-of-project" (optional),
   "assignee_id": "uuid-of-user" (optional)
 }
 ```
 
-Updates a ticket.
+Updates a ticket. All fields are optional - only provide the fields you want to change.
 
 #### Delete Ticket
 ```
@@ -175,6 +207,83 @@ Authorization: Token <token>
 ```
 
 Deletes a ticket.
+
+### Project Endpoints (All Require Authentication)
+
+#### Get All Projects
+```
+GET /projects
+Authorization: Token <token>
+```
+
+Returns all projects.
+
+**Example Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "name": "ECE1779 Final Project",
+    "created_by": {
+      "id": "uuid",
+      "email": "alice@example.com",
+      "name": "Alice Smith"
+    }
+  },
+  {
+    "id": "uuid",
+    "name": "Personal Tasks",
+    "created_by": {
+      "id": "uuid",
+      "email": "bob@example.com",
+      "name": "Bob Johnson"
+    }
+  }
+]
+```
+
+#### Get Single Project
+```
+GET /projects/{project_id}
+Authorization: Token <token>
+```
+
+Returns details of a single project.
+
+#### Create Project
+```
+POST /projects/create
+Authorization: Token <token>
+Content-Type: application/json
+
+{
+  "name": "New Project"
+}
+```
+
+Creates a new project. The authenticated user will be set as the creator.
+
+#### Update Project
+```
+PATCH /projects/{project_id}/update
+Authorization: Token <token>
+Content-Type: application/json
+
+{
+  "name": "Updated Project Name"
+}
+```
+
+Updates a project. Only the project creator can update the project.
+
+#### Delete Project
+```
+DELETE /projects/{project_id}/delete
+Authorization: Token <token>
+```
+
+Deletes a project. Only the project creator can delete the project.
+**Note:** This will also delete all tickets associated with this project (CASCADE).
 
 ## Testing the API
 
@@ -212,14 +321,40 @@ curl -X POST http://localhost:8000/tickets/create \
   -H "Content-Type: application/json" \
   -d '{"name":"Test ticket","description":"Testing","status":"TODO"}'
 
-# Update ticket
+# Update ticket status
 curl -X PATCH http://localhost:8000/tickets/1 \
   -H "Authorization: Token $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"status":"DONE"}'
 
+# Update ticket assignee and project
+curl -X PATCH http://localhost:8000/tickets/1 \
+  -H "Authorization: Token $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"assignee_id":"user-uuid","project_id":"project-uuid"}'
+
 # Delete ticket
 curl -X DELETE http://localhost:8000/tickets/1/delete \
+  -H "Authorization: Token $TOKEN"
+
+# Get all projects
+curl http://localhost:8000/projects \
+  -H "Authorization: Token $TOKEN"
+
+# Create project
+curl -X POST http://localhost:8000/projects/create \
+  -H "Authorization: Token $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"New Project"}'
+
+# Update project
+curl -X PATCH http://localhost:8000/projects/{project_id}/update \
+  -H "Authorization: Token $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Updated Project Name"}'
+
+# Delete project
+curl -X DELETE http://localhost:8000/projects/{project_id}/delete \
   -H "Authorization: Token $TOKEN"
 
 # Logout
@@ -235,11 +370,17 @@ curl -X POST http://localhost:8000/logout \
 - `password` (String) - User password (plain text for development)
 - `name` (String) - User name
 
+### Project
+- `id` (UUID) - Unique identifier
+- `name` (String) - Project name
+- `created_by` (ForeignKey) - User who created the project
+
 ### Ticket
 - `id` (Integer) - Auto-incrementing ID
 - `name` (String) - Ticket name
 - `description` (Text) - Ticket description
 - `status` (Choice) - TODO, IN_PROGRESS, DONE, WONT_DO
+- `project` (ForeignKey) - Associated project (required)
 - `assignee` (ForeignKey) - Assigned user (nullable)
 
 ## Authentication Details

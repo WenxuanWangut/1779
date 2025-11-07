@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Ticket, User
+from .models import Ticket, User, Project
 from .serializers import TicketSerializer, UserSerializer
 from .auth import authenticate_request, create_token, delete_token, get_user_from_token
 
@@ -57,11 +57,29 @@ def logout(request):
 @authenticate_request
 def get_tickets(request):
     """
-    Get all tickets (authenticated).
+    Get all tickets grouped by status (authenticated).
+    Returns: {
+        "TODO": [...],
+        "IN_PROGRESS": [...],
+        "DONE": [...],
+        "WONT_DO": [...]
+    }
     """
     tickets = Ticket.objects.all()
-    serializer = TicketSerializer(tickets, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    # Group tickets by status
+    grouped_tickets = {
+        'TODO': [],
+        'IN_PROGRESS': [],
+        'DONE': [],
+        'WONT_DO': []
+    }
+    
+    for ticket in tickets:
+        serialized_ticket = TicketSerializer(ticket).data
+        grouped_tickets[ticket.status].append(serialized_ticket)
+    
+    return Response(grouped_tickets, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -69,24 +87,42 @@ def get_tickets(request):
 def create_ticket(request):
     """
     Create a new ticket (authenticated).
+    Requires project_id in request body.
     """
+    # Project is required
+    project_id = request.data.get('project_id')
+    if not project_id:
+        return Response(
+            {'error': 'project_id is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        project = Project.objects.get(id=project_id)
+    except Project.DoesNotExist:
+        return Response(
+            {'error': 'Project not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
     serializer = TicketSerializer(data=request.data)
     if serializer.is_valid():
         # Handle assignee_id if provided
+        assignee = None
         assignee_id = request.data.get('assignee_id')
         if assignee_id:
             try:
                 assignee = User.objects.get(id=assignee_id)
-                ticket = serializer.save(assignee=assignee)
             except User.DoesNotExist:
                 return Response(
                     {'error': 'Assignee not found'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        else:
-            ticket = serializer.save()
         
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # Save with project and assignee
+        ticket = serializer.save(project=project, assignee=assignee)
+        
+        return Response(TicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -95,6 +131,7 @@ def create_ticket(request):
 def update_ticket(request, ticket_id):
     """
     Update an existing ticket (authenticated).
+    Optional fields: name, description, status, assignee_id, project_id
     """
     try:
         ticket = Ticket.objects.get(id=ticket_id)
@@ -104,26 +141,36 @@ def update_ticket(request, ticket_id):
             status=status.HTTP_404_NOT_FOUND
         )
     
+    # Prepare update kwargs
+    update_kwargs = {}
+    
     # Handle assignee_id if provided
     assignee_id = request.data.get('assignee_id')
     if assignee_id:
         try:
             assignee = User.objects.get(id=assignee_id)
-            request.data['assignee'] = assignee
+            update_kwargs['assignee'] = assignee
         except User.DoesNotExist:
             return Response(
                 {'error': 'Assignee not found'},
                 status=status.HTTP_400_BAD_REQUEST
             )
     
+    # Handle project_id if provided
+    project_id = request.data.get('project_id')
+    if project_id:
+        try:
+            project = Project.objects.get(id=project_id)
+            update_kwargs['project'] = project
+        except Project.DoesNotExist:
+            return Response(
+                {'error': 'Project not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
     serializer = TicketSerializer(ticket, data=request.data, partial=True)
     if serializer.is_valid():
-        # Save assignee if provided
-        if assignee_id:
-            serializer.save(assignee=assignee)
-        else:
-            serializer.save()
-        
+        serializer.save(**update_kwargs)
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

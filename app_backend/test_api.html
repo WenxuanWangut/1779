@@ -67,13 +67,20 @@
             font-family: monospace;
             font-size: 12px;
         }
-        #ticketList {
+        #ticketList, #projectList {
             border: 1px solid #ccc;
             padding: 10px;
             height: 400px;
             overflow-y: scroll;
             background-color: #f9f9f9;
             margin: 20px 0;
+        }
+        .project-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
         }
         .log-entry {
             padding: 5px;
@@ -144,12 +151,47 @@
             <div id="log"></div>
         </div>
 
+    </div>
+
+    <h2>Projects</h2>
+    <button onclick="loadProjects()">Refresh Projects</button>
+    <div id="projectList"></div>
+
+    <div class="container" style="margin-top: 40px;">
+        <!-- Left Column: Project Management -->
+        <div>
+            <div class="section">
+                <h2>Create Project</h2>
+                <input type="text" id="newProjectName" placeholder="Project Name">
+                <button class="success" onclick="createProject()">Create Project</button>
+            </div>
+
+            <div class="section">
+                <h2>Update Project</h2>
+                <input type="text" id="updateProjectId" placeholder="Project ID (UUID)">
+                <input type="text" id="updateProjectName" placeholder="New Project Name">
+                <button onclick="updateProject()">Update Project</button>
+            </div>
+
+            <div class="section">
+                <h2>Delete Project</h2>
+                <input type="text" id="deleteProjectId" placeholder="Project ID (UUID)">
+                <button class="danger" onclick="deleteProject()">Delete Project</button>
+                <p style="font-size: 12px; color: #dc3545; margin-top: 10px;">
+                    ⚠️ Warning: This will also delete all tickets in this project!
+                </p>
+            </div>
+        </div>
+
         <!-- Right Column: Tickets -->
         <div>
             <div class="section">
                 <h2>Create Ticket</h2>
                 <input type="text" id="newTicketName" placeholder="Ticket Name">
                 <textarea id="newTicketDescription" placeholder="Description" rows="3"></textarea>
+                <select id="newTicketProject">
+                    <option value="">-- Select Project --</option>
+                </select>
                 <select id="newTicketStatus">
                     <option value="TODO">TODO</option>
                     <option value="IN_PROGRESS">IN PROGRESS</option>
@@ -164,11 +206,17 @@
                 <input type="number" id="updateTicketId" placeholder="Ticket ID">
                 <input type="text" id="updateTicketName" placeholder="New Name (optional)">
                 <select id="updateTicketStatus">
-                    <option value="">-- Don't Change --</option>
+                    <option value="">-- Don't Change Status --</option>
                     <option value="TODO">TODO</option>
                     <option value="IN_PROGRESS">IN PROGRESS</option>
                     <option value="DONE">DONE</option>
                     <option value="WONT_DO">WON'T DO</option>
+                </select>
+                <select id="updateTicketProject">
+                    <option value="">-- Don't Change Project --</option>
+                </select>
+                <select id="updateTicketAssignee">
+                    <option value="">-- Don't Change Assignee --</option>
                 </select>
                 <button onclick="updateTicket()">Update Ticket</button>
             </div>
@@ -252,6 +300,7 @@
                     authToken = result.token;
                     currentUser = result.user;
                     updateStatus(`Authenticated as ${currentUser.name}`, true);
+                    loadProjects();
                     loadTickets();
                 } else {
                     alert('Login failed: ' + result.error);
@@ -284,8 +333,10 @@
                 
                 authToken = null;
                 currentUser = null;
+                allProjects = [];
                 updateStatus('Logged out', false);
                 document.getElementById('ticketList').innerHTML = '<p>Please login to view tickets.</p>';
+                document.getElementById('projectList').innerHTML = '<p>Please login to view projects.</p>';
             } catch (error) {
                 addLog('error', 'POST', '/logout', null, { error: error.message });
                 alert('Error: ' + error.message);
@@ -313,32 +364,76 @@
                     return;
                 }
 
-                const tickets = await response.json();
-                addLog('response', 'GET', '/tickets', null, { count: tickets.length });
-                displayTickets(tickets);
+                const groupedTickets = await response.json();
+                const totalCount = Object.values(groupedTickets).reduce((sum, arr) => sum + arr.length, 0);
+                addLog('response', 'GET', '/tickets', null, { total: totalCount, grouped: true });
+                displayTickets(groupedTickets);
+                
+                // Extract unique users from tickets and projects for assignee dropdown
+                const usersMap = new Map();
+                Object.values(groupedTickets).flat().forEach(ticket => {
+                    if (ticket.assignee) {
+                        usersMap.set(ticket.assignee.id, ticket.assignee);
+                    }
+                    if (ticket.project && ticket.project.created_by) {
+                        usersMap.set(ticket.project.created_by.id, ticket.project.created_by);
+                    }
+                });
+                
+                // Also add users from projects
+                if (allProjects) {
+                    allProjects.forEach(project => {
+                        if (project.created_by) {
+                            usersMap.set(project.created_by.id, project.created_by);
+                        }
+                    });
+                }
+                
+                updateAssigneeDropdowns(Array.from(usersMap.values()));
             } catch (error) {
                 addLog('error', 'GET', '/tickets', null, { error: error.message });
                 alert('Error loading tickets: ' + error.message);
             }
         }
 
-        function displayTickets(tickets) {
+        function displayTickets(groupedTickets) {
             const ticketList = document.getElementById('ticketList');
-            if (tickets.length === 0) {
+            
+            // Count total tickets
+            const totalTickets = Object.values(groupedTickets).reduce((sum, arr) => sum + arr.length, 0);
+            if (totalTickets === 0) {
                 ticketList.innerHTML = '<p>No tickets found.</p>';
                 return;
             }
 
-            ticketList.innerHTML = tickets.map(ticket => `
-                <div class="ticket-item">
-                    <div class="ticket-header">
-                        <strong>#${ticket.id} - ${ticket.name}</strong>
-                        <span class="ticket-status status-${ticket.status}">${ticket.status}</span>
-                    </div>
-                    <p>${ticket.description}</p>
-                    <small>Assignee: ${ticket.assignee ? ticket.assignee.name + ' (' + ticket.assignee.email + ')' : 'Unassigned'}</small>
-                </div>
-            `).join('');
+            // Display tickets grouped by status
+            let html = '';
+            const statuses = ['TODO', 'IN_PROGRESS', 'DONE', 'WONT_DO'];
+            
+            statuses.forEach(status => {
+                const tickets = groupedTickets[status] || [];
+                if (tickets.length > 0) {
+                    html += `<h3 style="margin-top: 20px; color: #333;">${status.replace('_', ' ')} (${tickets.length})</h3>`;
+                    html += tickets.map(ticket => `
+                        <div class="ticket-item">
+                            <div class="ticket-header">
+                                <strong>#${ticket.id} - ${ticket.name}</strong>
+                                <div>
+                                    <span class="ticket-status status-${ticket.status}">${ticket.status}</span>
+                                </div>
+                            </div>
+                            <p>${ticket.description}</p>
+                            <small><strong>Project:</strong> ${ticket.project ? ticket.project.name : 'N/A'}</small><br>
+                            <small><strong>Assignee:</strong> ${ticket.assignee ? ticket.assignee.name + ' (' + ticket.assignee.email + ')' : 'Unassigned'}</small>
+                            <div style="margin-top: 10px;">
+                                <button style="padding: 5px 10px; font-size: 12px;" onclick="fillUpdateTicket(${ticket.id}, '${ticket.name.replace(/'/g, "\\'")}', '${ticket.status}', '${ticket.project ? ticket.project.id : ''}', '${ticket.assignee ? ticket.assignee.id : ''}')">Edit</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            });
+            
+            ticketList.innerHTML = html;
         }
 
         async function createTicket() {
@@ -350,14 +445,20 @@
             const name = document.getElementById('newTicketName').value;
             const description = document.getElementById('newTicketDescription').value;
             const status = document.getElementById('newTicketStatus').value;
+            const project_id = document.getElementById('newTicketProject').value;
 
             if (!name || !description) {
                 alert('Please enter name and description');
                 return;
             }
 
+            if (!project_id) {
+                alert('Please select a project');
+                return;
+            }
+
             try {
-                const data = { name, description, status };
+                const data = { name, description, status, project_id };
                 const response = await fetch('http://localhost:8000/tickets/create', {
                     method: 'POST',
                     headers: {
@@ -383,6 +484,15 @@
             }
         }
 
+        function fillUpdateTicket(ticketId, name, status, projectId, assigneeId) {
+            document.getElementById('updateTicketId').value = ticketId;
+            document.getElementById('updateTicketName').value = name;
+            document.getElementById('updateTicketStatus').value = status;
+            document.getElementById('updateTicketProject').value = projectId;
+            document.getElementById('updateTicketAssignee').value = assigneeId;
+            window.scrollTo({ top: document.getElementById('updateTicketId').offsetTop - 100, behavior: 'smooth' });
+        }
+
         async function updateTicket() {
             if (!authToken) {
                 alert('Please login first!');
@@ -392,6 +502,8 @@
             const ticketId = document.getElementById('updateTicketId').value;
             const name = document.getElementById('updateTicketName').value;
             const status = document.getElementById('updateTicketStatus').value;
+            const project_id = document.getElementById('updateTicketProject').value;
+            const assignee_id = document.getElementById('updateTicketAssignee').value;
 
             if (!ticketId) {
                 alert('Please enter ticket ID');
@@ -401,6 +513,8 @@
             const updates = {};
             if (name) updates.name = name;
             if (status) updates.status = status;
+            if (project_id) updates.project_id = project_id;
+            if (assignee_id) updates.assignee_id = assignee_id;
 
             if (Object.keys(updates).length === 0) {
                 alert('Please provide at least one field to update');
@@ -424,6 +538,8 @@
                     document.getElementById('updateTicketId').value = '';
                     document.getElementById('updateTicketName').value = '';
                     document.getElementById('updateTicketStatus').value = '';
+                    document.getElementById('updateTicketProject').value = '';
+                    document.getElementById('updateTicketAssignee').value = '';
                     loadTickets();
                 } else {
                     alert('Error: ' + (result.error || JSON.stringify(result)));
@@ -471,6 +587,253 @@
             } catch (error) {
                 addLog('error', 'DELETE', `/tickets/${ticketId}/delete`, null, { error: error.message });
                 alert('Error deleting ticket: ' + error.message);
+            }
+        }
+
+        // ==================== PROJECT MANAGEMENT ====================
+
+        let allProjects = [];
+
+        async function loadProjects() {
+            if (!authToken) {
+                document.getElementById('projectList').innerHTML = '<p>Please login first.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/projects', {
+                    headers: {
+                        'Authorization': `Token ${authToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    authToken = null;
+                    currentUser = null;
+                    updateStatus('Token expired - please login again', false);
+                    alert('Your session has expired. Please login again.');
+                    return;
+                }
+
+                allProjects = await response.json();
+                addLog('response', 'GET', '/projects', null, { count: allProjects.length });
+                displayProjects(allProjects);
+                updateProjectDropdown(allProjects);
+            } catch (error) {
+                addLog('error', 'GET', '/projects', null, { error: error.message });
+                alert('Error loading projects: ' + error.message);
+            }
+        }
+
+        function displayProjects(projects) {
+            const projectList = document.getElementById('projectList');
+            
+            if (projects.length === 0) {
+                projectList.innerHTML = '<p>No projects found.</p>';
+                return;
+            }
+
+            let html = '';
+            projects.forEach(project => {
+                const isOwner = currentUser && project.created_by.id === currentUser.id;
+                html += `
+                    <div class="project-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${project.name}</strong>
+                                <br>
+                                <small>ID: <code>${project.id}</code></small>
+                                <br>
+                                <small>Created by: ${project.created_by.name} (${project.created_by.email})</small>
+                                ${isOwner ? '<br><small style="color: #28a745;">✓ You own this project</small>' : ''}
+                            </div>
+                            ${isOwner ? `
+                                <div>
+                                    <button onclick="fillUpdateProject('${project.id}', '${project.name.replace(/'/g, "\\'")}')">Edit</button>
+                                    <button class="danger" onclick="fillDeleteProject('${project.id}')">Delete</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            projectList.innerHTML = html;
+        }
+
+        function updateProjectDropdown(projects) {
+            // Update create ticket project dropdown
+            const createSelect = document.getElementById('newTicketProject');
+            createSelect.innerHTML = '<option value="">-- Select Project --</option>';
+            
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.id;
+                option.textContent = project.name;
+                createSelect.appendChild(option);
+            });
+            
+            // Update update ticket project dropdown
+            const updateSelect = document.getElementById('updateTicketProject');
+            updateSelect.innerHTML = '<option value="">-- Don\'t Change Project --</option>';
+            
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.id;
+                option.textContent = project.name;
+                updateSelect.appendChild(option);
+            });
+        }
+
+        function updateAssigneeDropdowns(users) {
+            const updateSelect = document.getElementById('updateTicketAssignee');
+            updateSelect.innerHTML = '<option value="">-- Don\'t Change Assignee --</option>';
+            
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name} (${user.email})`;
+                updateSelect.appendChild(option);
+            });
+        }
+
+        function fillUpdateProject(projectId, projectName) {
+            document.getElementById('updateProjectId').value = projectId;
+            document.getElementById('updateProjectName').value = projectName;
+            window.scrollTo({ top: document.getElementById('updateProjectId').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function fillDeleteProject(projectId) {
+            document.getElementById('deleteProjectId').value = projectId;
+            window.scrollTo({ top: document.getElementById('deleteProjectId').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        async function createProject() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const name = document.getElementById('newProjectName').value;
+
+            if (!name) {
+                alert('Please enter project name');
+                return;
+            }
+
+            try {
+                const data = { name };
+                const response = await fetch('http://localhost:8000/projects/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Token ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                addLog(response.ok ? 'response' : 'error', 'POST', '/projects/create', data, result);
+                
+                if (response.ok) {
+                    document.getElementById('newProjectName').value = '';
+                    loadProjects();
+                    alert('Project created successfully!');
+                } else {
+                    alert('Error: ' + (result.error || JSON.stringify(result)));
+                }
+            } catch (error) {
+                addLog('error', 'POST', '/projects/create', null, { error: error.message });
+                alert('Error creating project: ' + error.message);
+            }
+        }
+
+        async function updateProject() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const projectId = document.getElementById('updateProjectId').value;
+            const name = document.getElementById('updateProjectName').value;
+
+            if (!projectId) {
+                alert('Please enter project ID');
+                return;
+            }
+
+            if (!name) {
+                alert('Please enter new project name');
+                return;
+            }
+
+            try {
+                const data = { name };
+                const response = await fetch(`http://localhost:8000/projects/${projectId}/update`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Token ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                addLog(response.ok ? 'response' : 'error', 'PATCH', `/projects/${projectId}/update`, data, result);
+                
+                if (response.ok) {
+                    document.getElementById('updateProjectId').value = '';
+                    document.getElementById('updateProjectName').value = '';
+                    loadProjects();
+                    alert('Project updated successfully!');
+                } else {
+                    alert('Error: ' + (result.error || JSON.stringify(result)));
+                }
+            } catch (error) {
+                addLog('error', 'PATCH', `/projects/${projectId}/update`, null, { error: error.message });
+                alert('Error updating project: ' + error.message);
+            }
+        }
+
+        async function deleteProject() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const projectId = document.getElementById('deleteProjectId').value;
+
+            if (!projectId) {
+                alert('Please enter project ID');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete this project? This will also delete all tickets in this project!`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8000/projects/${projectId}/delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Token ${authToken}`
+                    }
+                });
+
+                const result = await response.json();
+                addLog(response.ok ? 'response' : 'error', 'DELETE', `/projects/${projectId}/delete`, null, result);
+                
+                if (response.ok) {
+                    document.getElementById('deleteProjectId').value = '';
+                    loadProjects();
+                    loadTickets(); // Refresh tickets since some may have been deleted
+                    alert(result.message || 'Project deleted successfully!');
+                } else {
+                    alert('Error: ' + (result.error || JSON.stringify(result)));
+                }
+            } catch (error) {
+                addLog('error', 'DELETE', `/projects/${projectId}/delete`, null, { error: error.message });
+                alert('Error deleting project: ' + error.message);
             }
         }
     </script>
