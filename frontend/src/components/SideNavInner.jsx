@@ -1,9 +1,10 @@
 import React from 'react'
 import { SideNavigation, Section, HeadingItem, NestableNavigationContent, NavigationFooter, ButtonItem } from '@atlaskit/side-navigation'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 export default function SideNav(){
   const location = useLocation()
+  const navigate = useNavigate()
   
   return (
     <SideNavigation label="CloudCollab Navigation">
@@ -11,15 +12,13 @@ export default function SideNav(){
         <Section>
           <HeadingItem>Main</HeadingItem>
           <ButtonItem 
-            component={Link} 
-            to="/"
+            onClick={() => navigate('/')}
             isSelected={location.pathname === '/'}
           >
             Dashboard
           </ButtonItem>
           <ButtonItem 
-            component={Link} 
-            to="/projects"
+            onClick={() => navigate('/projects')}
             isSelected={location.pathname === '/projects' || location.pathname.startsWith('/projects/')}
           >
             Projects

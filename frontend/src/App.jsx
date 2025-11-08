@@ -2,7 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/auth/Login.jsx'
 import Register from './pages/auth/Register.jsx'
-import MainPage from './pages/MainPage.jsx'
+import Dashboard from './pages/dashboard/Dashboard.jsx'
 import ProjectsList from './pages/projects/ProjectsList.jsx'
 import ProjectBoard from './pages/projects/ProjectBoard.jsx'
 import TicketDetail from './pages/tickets/TicketDetail.jsx'
@@ -32,7 +32,7 @@ export default function App(){
       
       {/* Protected routes */}
       <Route path="/" element={<PrivateRoute><AppShell /></PrivateRoute>}>
-        <Route index element={<MainPage />} />
+        <Route index element={<Dashboard />} />
         <Route path="projects" element={<ProjectsList />} />
         <Route path="projects/:id" element={<ProjectBoard />} />
         <Route path="tickets/:id" element={<TicketDetail />} />

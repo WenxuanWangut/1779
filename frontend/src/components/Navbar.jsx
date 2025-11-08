@@ -7,9 +7,17 @@ import SideNav from './SideNavInner.jsx'
 export default function AppShell(){
   return (
     <PageLayout>
-      <TopNavigation isFixed><TopNav /></TopNavigation>
-      <LeftSidebar isFixed><SideNav /></LeftSidebar>
-      <Content><div className="page"><Outlet /></div></Content>
+      <TopNavigation isFixed height={60}>
+        <TopNav />
+      </TopNavigation>
+      <LeftSidebar isFixed width={240}>
+        <SideNav />
+      </LeftSidebar>
+      <Content testId="content">
+        <div className="page">
+          <Outlet />
+        </div>
+      </Content>
     </PageLayout>
   )
 }

@@ -5,6 +5,7 @@ import TicketBoard from '../../components/TicketBoard.jsx'
 import TicketModal from '../../components/TicketModal.jsx'
 import TicketFilters from '../../components/TicketFilters.jsx'
 import { listTickets, createTicket, updateTicket, reorderTickets, deleteTicket } from '../../api/tickets.js'
+import { getProject } from '../../api/projects.js'
 import useSocket from '../../hooks/useSocket.js'
 import useUI from '../../context/UIContext.jsx'
 import { ConfirmDialog } from '../../components/Dialogs.jsx'
@@ -13,6 +14,7 @@ export default function ProjectBoard(){
   const { id } = useParams()
   const navigate = useNavigate()
   const [tickets, setTickets] = useState([])
+  const [project, setProject] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTicket, setEditingTicket] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -24,10 +26,14 @@ export default function ProjectBoard(){
   const refresh = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await listTickets(id)
-      setTickets(data)
+      const [ticketsData, projectData] = await Promise.all([
+        listTickets(id),
+        getProject(id)
+      ])
+      setTickets(ticketsData)
+      setProject(projectData)
     } catch (error) {
-      pushToast(`Failed to load tickets: ${error.response?.data?.message || error.message}`, 'error')
+      pushToast(`Failed to load data: ${error.response?.data?.message || error.message}`, 'error')
     } finally {
       setLoading(false)
     }
@@ -166,8 +172,8 @@ export default function ProjectBoard(){
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12}}>
         <div>
           <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 4}}>
-            <Button appearance="subtle" onClick={() => navigate('/projects')}>← Back</Button>
-            <h3 style={{ margin: 0 }}>Project #{id}</h3>
+            <Button appearance="subtle" onClick={() => navigate('/projects')}>← Back to projects</Button>
+            <h3 style={{ margin: 0 }}>{project ? project.name : 'Loading...'}</h3>
           </div>
           <div style={{ fontSize: 12, color: socketConnected ? '#0E8750' : '#999', marginLeft: 40 }}>
             {socketConnected ? '● Real-time updates active' : '○ Connecting...'}
@@ -175,7 +181,7 @@ export default function ProjectBoard(){
         </div>
         <div style={{display:'flex', gap:8}}>
           <Button appearance="subtle" onClick={() => navigate(`/projects/${id}/settings`)}>Settings</Button>
-          <Button appearance="primary" onClick={()=>setModalOpen(true)}>New Ticket</Button>
+          <Button appearance="primary" onClick={() => setModalOpen(true)}>New Ticket</Button>
         </div>
       </div>
       
@@ -200,12 +206,14 @@ export default function ProjectBoard(){
           onTicketClick={handleTicketClick}
         />
       )}
-      <TicketModal 
-        isOpen={modalOpen} 
-        onClose={handleModalClose} 
-        onSubmit={handleModalSubmit}
-        initial={editingTicket || {}}
-      />
+      {modalOpen && (
+        <TicketModal 
+          isOpen={modalOpen} 
+          onClose={handleModalClose} 
+          onSubmit={handleModalSubmit}
+          initial={editingTicket || {}}
+        />
+      )}
       <ConfirmDialog
         isOpen={deleteDialog.open}
         title="Delete Ticket"

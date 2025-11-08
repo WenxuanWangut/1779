@@ -1,13 +1,50 @@
-html, body, #root { height: 100%; margin: 0; }
-* { box-sizing: border-box; }
-.center { display:flex; align-items:center; justify-content:center; height:100%; }
+html, body, #root { 
+  height: 100%; 
+  margin: 0; 
+}
+
+* { 
+  box-sizing: border-box; 
+}
+
+.center { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  height: 100%; 
+}
+
 .page { 
-  padding: 16px; 
+  padding: 16px 24px;
   display: flex;
   justify-content: center;
   width: 100%;
+  min-height: 100%;
 }
+
 .page > * {
   width: 100%;
   max-width: 1200px;
+}
+
+/* Fix for Atlaskit Modal appearing behind other elements */
+[data-ds--modal--container] {
+  z-index: 9999 !important;
+}
+
+[data-ds--modal--blanket] {
+  z-index: 9998 !important;
+  /* Speed up modal rendering */
+  transition: opacity 0.15s ease-in-out !important;
+}
+
+/* Ensure modal portal renders correctly */
+#atlaskit-portal-container {
+  position: relative;
+  z-index: 9999;
+}
+
+/* Speed up modal animations */
+[data-ds--modal--dialog] {
+  transition: transform 0.15s ease-in-out !important;
 }

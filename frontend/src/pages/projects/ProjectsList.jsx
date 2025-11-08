@@ -74,7 +74,13 @@ export default function ProjectsList(){
         <div style={{display:'flex', gap: 8, alignItems:'center', flex: 1, maxWidth: 400, marginLeft: 16}}>
           <SearchBar onChange={setQ} placeholder="Search projects..." />
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} isLoading={createMut.isPending}>New Project</Button>
+        <Button 
+          appearance="primary"
+          onClick={() => setShowCreateDialog(true)} 
+          isDisabled={createMut.isPending}
+        >
+          {createMut.isPending ? 'Creating...' : 'New Project'}
+        </Button>
       </div>
       {filtered.length===0 ? (
         <EmptyState 
@@ -102,9 +108,9 @@ export default function ProjectsList(){
                 appearance="subtle" 
                 spacing="none" 
                 onClick={()=>handleDelete(p)}
-                isLoading={delMut.isPending && deleteDialog.project?.id === p.id}
+                isDisabled={delMut.isPending && deleteDialog.project?.id === p.id}
               >
-                Delete
+                {delMut.isPending && deleteDialog.project?.id === p.id ? 'Deleting...' : 'Delete'}
               </Button>
             </li>
           ))}

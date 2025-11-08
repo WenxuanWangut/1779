@@ -1,30 +1,64 @@
 import client from './client.js'
 
-// Since backend doesn't have projects yet, we'll adapt the API calls
-// Backend has: GET /tickets (all tickets)
+/**
+ * List all tickets, optionally filtered by project
+ * Backend returns tickets grouped by status: { TODO: [...], IN_PROGRESS: [...], DONE: [...], WONT_DO: [...] }
+ * This function flattens them into a single array and filters by projectId if provided
+ */
 export const listTickets = async (projectId) => {
-  // For now, ignore projectId and get all tickets
-  return client.get('/tickets').then(r => r.data)
+  const groupedTickets = await client.get('/tickets').then(r => r.data)
+  
+  // Flatten all tickets from grouped response
+  const allTickets = Object.values(groupedTickets).flat()
+  
+  // Filter by project if projectId is provided
+  if (projectId) {
+    return allTickets.filter(ticket => ticket.project?.id === projectId)
+  }
+  
+  return allTickets
 }
 
+/**
+ * Get a single ticket by ID
+ * Since backend doesn't have a dedicated endpoint, we fetch all and filter
+ */
 export const getTicket = async (id) => {
-  // Backend doesn't have GET /tickets/:id, so we'll get all and filter
-  // In the future, backend should add this endpoint
-  const tickets = await client.get('/tickets').then(r => r.data)
+  const tickets = await listTickets()
   return tickets.find(t => t.id === parseInt(id)) || null
 }
 
+/**
+ * Create a new ticket
+ * Required: name, description, project_id
+ * Optional: status (defaults to TODO), assignee_id
+ */
 export const createTicket = async (projectId, payload) => {
-  // Backend endpoint: POST /tickets/create
-  return client.post('/tickets/create', payload).then(r => r.data)
+  // Ensure project_id is included in the payload
+  const data = {
+    ...payload,
+    project_id: projectId || payload.project_id
+  }
+  return client.post('/tickets/create', data).then(r => r.data)
 }
 
+/**
+ * Update a ticket
+ * Optional fields: name, description, status, project_id, assignee_id
+ */
 export const updateTicket = (id, patch) => client.patch(`/tickets/${id}`, patch).then(r => r.data)
 
+/**
+ * Delete a ticket
+ */
 export const deleteTicket = (id) => client.delete(`/tickets/${id}/delete`).then(r => r.data)
 
-// Note: Backend doesn't support reorder yet
+/**
+ * Reorder tickets (not yet supported by backend)
+ * This is a placeholder for drag-and-drop functionality
+ */
 export const reorderTickets = async (projectId, payload) => {
-  // Placeholder - would need backend support
+  // TODO: Implement backend support for ticket reordering
+  console.warn('Ticket reordering is not yet supported by the backend')
   return Promise.resolve()
 }
