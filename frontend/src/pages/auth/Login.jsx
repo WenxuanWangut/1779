@@ -27,12 +27,12 @@ export default function Login(){
           {({ formProps, submitting }) => (
             <form {...formProps}>
               <Field name="email" label="Email" defaultValue="alice@example.com">
-                {({ fieldProps }) => <Textfield {...fieldProps} type="email" />}
+                {({ fieldProps }) => <Textfield {...fieldProps} type="email" autoComplete="username" />}
               </Field>
               <Field name="password" label="Password" defaultValue="password123">
-                {({ fieldProps }) => <Textfield type="password" {...fieldProps} />}
+                {({ fieldProps }) => <Textfield type="password" {...fieldProps} autoComplete="current-password" />}
               </Field>
-              <Button type="submit" appearance="primary" isLoading={submitting}>Login</Button>
+              <Button type="submit" appearance="primary" isDisabled={submitting}>{submitting ? 'Logging in...' : 'Login'}</Button>
             </form>
           )}
         </Form>
@@ -46,4 +46,3 @@ export default function Login(){
     </div>
   )
 }
-

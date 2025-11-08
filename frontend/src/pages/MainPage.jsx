@@ -11,12 +11,14 @@ export default function MainPage(){
   const { user } = useAuth()
   const { pushToast } = useUI()
   const navigate = useNavigate()
-  
-  const { data: tickets = [], isLoading } = useQuery({ 
-    queryKey:['tickets'], 
+
+  const { data: tickets = [], isLoading } = useQuery({
+    queryKey:['tickets'],
     queryFn: async () => {
+      const normalize = (d) => Array.isArray(d) ? d : (d?.tickets || d?.results || d?.items || [])
       try {
-        return await listTickets('default')
+        const data = await listTickets('default')
+        return normalize(data)
       } catch (err) {
         const response = await fetch('http://localhost:8000/tickets', {
           headers: {
@@ -24,7 +26,8 @@ export default function MainPage(){
           }
         })
         if (response.ok) {
-          return response.json()
+          const data = await response.json()
+          return normalize(data)
         }
         throw err
       }
@@ -49,9 +52,9 @@ export default function MainPage(){
 
       {/* Statistics Cards */}
       <div style={{
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-        gap: 16, 
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: 16,
         marginBottom: 32
       }}>
         <div style={{
@@ -65,7 +68,7 @@ export default function MainPage(){
             {isLoading ? '...' : stats.total}
           </div>
         </div>
-        
+
         <div style={{
           padding: 20,
           backgroundColor: '#fff3cd',
@@ -128,8 +131,8 @@ export default function MainPage(){
         {isLoading ? (
           <div className="center"><p>Loading tickets...</p></div>
         ) : tickets.length === 0 ? (
-          <EmptyState 
-            title="No tickets yet" 
+          <EmptyState
+            title="No tickets yet"
             description="Create your first project and ticket to get started"
           />
         ) : (
@@ -160,7 +163,7 @@ export default function MainPage(){
                     borderRadius: 4,
                     fontSize: 12,
                     fontWeight: 'bold',
-                    backgroundColor: ticket.status === 'DONE' ? '#d4edda' : 
+                    backgroundColor: ticket.status === 'DONE' ? '#d4edda' :
                                      ticket.status === 'IN_PROGRESS' ? '#d1ecf1' :
                                      ticket.status === 'WONT_DO' ? '#e2e3e5' : '#fff3cd',
                     color: ticket.status === 'DONE' ? '#155724' :
