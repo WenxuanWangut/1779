@@ -1,9 +1,9 @@
 from django.core.management.base import BaseCommand
-from board.models import User, Project, Ticket
+from board.models import User, Project, Ticket, Comment
 
 
 class Command(BaseCommand):
-    help = 'Seeds the database with test users, projects, and tickets'
+    help = 'Seeds the database with test users, projects, tickets, and comments'
 
     def handle(self, *args, **options):
         self.stdout.write('Seeding database with test data...\n')
@@ -66,6 +66,7 @@ class Command(BaseCommand):
             ('Add real-time notifications', 'Implement WebSocket support for real-time updates', Ticket.Status.WONT_DO, project2, None),
         ]
         
+        tickets = []
         for name, description, status, project, assignee in tickets_data:
             ticket, created = Ticket.objects.get_or_create(
                 name=name,
@@ -76,13 +77,40 @@ class Command(BaseCommand):
                     'assignee': assignee
                 }
             )
+            tickets.append(ticket)
             if created:
                 self.stdout.write(self.style.SUCCESS(f'✓ Created ticket: {ticket.name}'))
             else:
                 self.stdout.write(f'  Ticket already exists: {ticket.name}')
         
+        # Create test comments
+        ticket1, ticket2, ticket3, ticket4, ticket5, ticket6 = tickets
+        
+        comments_data = [
+            (ticket1, user1, 'Repository initialized with basic structure'),
+            (ticket1, user2, 'Added .gitignore and README files'),
+            (ticket3, user2, 'Started working on the authentication endpoints'),
+            (ticket3, user1, 'Login and logout endpoints are working. Need to add token refresh.'),
+            (ticket3, user2, 'Looks good! Can you also add rate limiting?'),
+            (ticket4, user2, 'Should we use JWT or session-based auth?'),
+            (ticket4, user1, 'I think token-based would be better for our use case'),
+        ]
+        
+        for ticket, commentor, content in comments_data:
+            comment, created = Comment.objects.get_or_create(
+                ticket=ticket,
+                commentor=commentor,
+                content=content,
+                defaults={}
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'✓ Created comment on: {ticket.name}'))
+            else:
+                self.stdout.write(f'  Comment already exists on: {ticket.name}')
+        
         self.stdout.write('\n' + self.style.SUCCESS('✓ Test data seeding complete!'))
         self.stdout.write(f'  - Users: {User.objects.count()} total')
         self.stdout.write(f'  - Projects: {Project.objects.count()} total')
         self.stdout.write(f'  - Tickets: {Ticket.objects.count()} total')
+        self.stdout.write(f'  - Comments: {Comment.objects.count()} total')
 

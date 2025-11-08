@@ -15,7 +15,7 @@ class BoardConfig(AppConfig):
     
     def seed_test_data(self):
         """Create test users, projects, and tickets on startup."""
-        from .models import User, Project, Ticket
+        from .models import User, Project, Ticket, Comment
         
         # Create test users using get_or_create
         user1, created1 = User.objects.get_or_create(
@@ -130,8 +130,76 @@ class BoardConfig(AppConfig):
         if created:
             print(f"✓ Created ticket: {ticket6.name}")
         
+        # Create test comments using get_or_create
+        # Comments for ticket1 (Setup project repository)
+        comment1, created = Comment.objects.get_or_create(
+            ticket=ticket1,
+            commentor=user1,
+            content='Repository initialized with basic structure',
+            defaults={}
+        )
+        if created:
+            print(f"✓ Created comment on ticket: {ticket1.name}")
+        
+        comment2, created = Comment.objects.get_or_create(
+            ticket=ticket1,
+            commentor=user2,
+            content='Added .gitignore and README files',
+            defaults={}
+        )
+        if created:
+            print(f"✓ Created comment on ticket: {ticket1.name}")
+        
+        # Comments for ticket3 (Implement REST API endpoints)
+        comment3, created = Comment.objects.get_or_create(
+            ticket=ticket3,
+            commentor=user2,
+            content='Started working on the authentication endpoints',
+            defaults={}
+        )
+        if created:
+            print(f"✓ Created comment on ticket: {ticket3.name}")
+        
+        comment4, created = Comment.objects.get_or_create(
+            ticket=ticket3,
+            commentor=user1,
+            content='Login and logout endpoints are working. Need to add token refresh.',
+            defaults={}
+        )
+        if created:
+            print(f"✓ Created comment on ticket: {ticket3.name}")
+        
+        comment5, created = Comment.objects.get_or_create(
+            ticket=ticket3,
+            commentor=user2,
+            content='Looks good! Can you also add rate limiting?',
+            defaults={}
+        )
+        if created:
+            print(f"✓ Created comment on ticket: {ticket3.name}")
+        
+        # Comments for ticket4 (Add authentication)
+        comment6, created = Comment.objects.get_or_create(
+            ticket=ticket4,
+            commentor=user2,
+            content='Should we use JWT or session-based auth?',
+            defaults={}
+        )
+        if created:
+            print(f"✓ Created comment on ticket: {ticket4.name}")
+        
+        comment7, created = Comment.objects.get_or_create(
+            ticket=ticket4,
+            commentor=user1,
+            content='I think token-based would be better for our use case',
+            defaults={}
+        )
+        if created:
+            print(f"✓ Created comment on ticket: {ticket4.name}")
+        
         print(f"✓ Test data seeding complete!")
         print(f"  - Users: {User.objects.count()} total")
         print(f"  - Projects: {Project.objects.count()} total")
         print(f"  - Tickets: {Ticket.objects.count()} total")
+        print(f"  - Comments: {Comment.objects.count()} total")
 

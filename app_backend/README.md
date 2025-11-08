@@ -40,6 +40,7 @@ This creates:
 - 2 test users (alice@example.com / password123, bob@example.com / password456)
 - 2 test projects (ECE1779 Final Project, Personal Tasks)
 - 6 test tickets with various statuses, assignees, and projects
+- 7 test comments on various tickets
 
 ## Running the Application
 
@@ -119,7 +120,7 @@ GET /tickets
 Authorization: Token <token>
 ```
 
-Returns all tickets grouped by status.
+Returns all tickets grouped by status. Each ticket includes its comments sorted by creation time.
 
 **Example Response:**
 ```json
@@ -130,11 +131,40 @@ Returns all tickets grouped by status.
       "name": "Add authentication",
       "description": "Implement user authentication and authorization",
       "status": "TODO",
+      "project": {
+        "id": "uuid",
+        "name": "ECE1779 Final Project",
+        "created_by": { ... }
+      },
       "assignee": {
         "id": "uuid",
         "email": "bob@example.com",
         "name": "Bob Johnson"
-      }
+      },
+      "comments": [
+        {
+          "id": "uuid",
+          "ticket": 4,
+          "commentor": {
+            "id": "uuid",
+            "email": "bob@example.com",
+            "name": "Bob Johnson"
+          },
+          "content": "Should we use JWT or session-based auth?",
+          "created_at": "2024-01-01T12:00:00Z"
+        },
+        {
+          "id": "uuid",
+          "ticket": 4,
+          "commentor": {
+            "id": "uuid",
+            "email": "alice@example.com",
+            "name": "Alice Smith"
+          },
+          "content": "I think token-based would be better for our use case",
+          "created_at": "2024-01-01T12:05:00Z"
+        }
+      ]
     }
   ],
   "IN_PROGRESS": [
@@ -207,6 +237,67 @@ Authorization: Token <token>
 ```
 
 Deletes a ticket.
+
+### Comment Endpoints (All Require Authentication)
+
+#### Get Comments for a Ticket
+```
+GET /tickets/{ticket_id}/comments
+Authorization: Token <token>
+```
+
+Returns all comments for a specific ticket, ordered by creation time (oldest first).
+
+**Example Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "ticket": 1,
+    "commentor": {
+      "id": "uuid",
+      "email": "alice@example.com",
+      "name": "Alice Smith"
+    },
+    "content": "This is a comment on the ticket",
+    "created_at": "2024-01-01T12:00:00Z"
+  }
+]
+```
+
+#### Create Comment
+```
+POST /tickets/{ticket_id}/comments/create
+Authorization: Token <token>
+Content-Type: application/json
+
+{
+  "content": "Your comment text"
+}
+```
+
+Creates a new comment on a ticket. The authenticated user will be set as the commentor.
+
+#### Update Comment
+```
+PATCH /comments/{comment_id}
+Authorization: Token <token>
+Content-Type: application/json
+
+{
+  "content": "Updated comment text"
+}
+```
+
+Updates a comment. Only the commentor can update their own comment.
+
+#### Delete Comment
+```
+DELETE /comments/{comment_id}/delete
+Authorization: Token <token>
+```
+
+Deletes a comment. Only the commentor can delete their own comment.
 
 ### Project Endpoints (All Require Authentication)
 
@@ -357,6 +448,26 @@ curl -X PATCH http://localhost:8000/projects/{project_id}/update \
 curl -X DELETE http://localhost:8000/projects/{project_id}/delete \
   -H "Authorization: Token $TOKEN"
 
+# Get comments for a ticket
+curl http://localhost:8000/tickets/1/comments \
+  -H "Authorization: Token $TOKEN"
+
+# Create comment
+curl -X POST http://localhost:8000/tickets/1/comments/create \
+  -H "Authorization: Token $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"This is a comment"}'
+
+# Update comment
+curl -X PATCH http://localhost:8000/comments/{comment_id} \
+  -H "Authorization: Token $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Updated comment text"}'
+
+# Delete comment
+curl -X DELETE http://localhost:8000/comments/{comment_id}/delete \
+  -H "Authorization: Token $TOKEN"
+
 # Logout
 curl -X POST http://localhost:8000/logout \
   -H "Authorization: Token $TOKEN"
@@ -382,6 +493,13 @@ curl -X POST http://localhost:8000/logout \
 - `status` (Choice) - TODO, IN_PROGRESS, DONE, WONT_DO
 - `project` (ForeignKey) - Associated project (required)
 - `assignee` (ForeignKey) - Assigned user (nullable)
+
+### Comment
+- `id` (UUID) - Unique identifier
+- `ticket` (ForeignKey) - Associated ticket
+- `commentor` (ForeignKey) - User who made the comment
+- `content` (Text) - Comment text
+- `created_at` (DateTime) - Timestamp when comment was created
 
 ## Authentication Details
 
