@@ -60,7 +60,6 @@ export default function TicketDetail(){
       qc.invalidateQueries(['ticket', id])
       qc.invalidateQueries(['tickets'])
       pushToast('Ticket updated successfully!')
-      setShowEditModal(false)
     },
     onError: (err) => pushToast(`Failed to update ticket: ${err.message}`, 'error')
   })

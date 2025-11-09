@@ -134,7 +134,11 @@ Returns all tickets grouped by status. Each ticket includes its comments sorted 
       "project": {
         "id": "uuid",
         "name": "ECE1779 Final Project",
-        "created_by": { ... }
+        "created_by": {
+          "id": "uuid",
+          "email": "alice@example.com",
+          "name": "Alice Smith"
+        }
       },
       "assignee": {
         "id": "uuid",
