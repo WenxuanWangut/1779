@@ -119,10 +119,6 @@ jobs:
         with:
           version: v1.30.0
 
-      - uses: imranismail/setup-kustomize@v2
-        with:
-          kustomize-version: v5.4.1
-
       - name: Setup doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -131,7 +127,7 @@ jobs:
       - name: Fetch kubeconfig from DigitalOcean
         run: doctl kubernetes cluster kubeconfig save --expiry-seconds 900 "$DO_K8S_CLUSTER"
 
-      - name: Use context (optional)
+      - name: Use context
         if: ${{ env.KUBE_CONTEXT != '' }}
         run: kubectl config use-context "${KUBE_CONTEXT}"
 
@@ -142,23 +138,22 @@ jobs:
           echo "KUBE_NS=$NS" >> $GITHUB_ENV
           kubectl get ns "$NS" >/dev/null 2>&1 || kubectl create ns "$NS"
 
-      - name: Pin images by digest
-        working-directory: k8s/overlays/prod
-        run: |
-          if [ "${{ needs.detect.outputs.backend }}" = "true" ]; then
-            kustomize edit set image app-backend=${{ env.IMAGE_BACKEND }}@${{ needs.build-push-backend.outputs.digest }}
-          fi
-          if [ "${{ needs.detect.outputs.frontend }}" = "true" ]; then
-            kustomize edit set image app-frontend=${{ env.IMAGE_FRONTEND }}@${{ needs.build-push-frontend.outputs.digest }}
-          fi
-
-      - name: Apply kustomize
+      - name: Apply base manifests
         run: |
           kubectl -n "$KUBE_NS" apply -k k8s/overlays/prod
 
       - name: Enforce backend single replica
         run: |
           kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=1 || true
+
+      - name: Set images by digest
+        run: |
+          if [ "${{ needs.detect.outputs.backend }}" = "true" ]; then
+            kubectl -n "$KUBE_NS" set image deploy/app-backend app-backend=${IMAGE_BACKEND}@${{ needs.build-push-backend.outputs.digest }} --record=true
+          fi
+          if [ "${{ needs.detect.outputs.frontend }}" = "true" ]; then
+            kubectl -n "$KUBE_NS" set image deploy/app-frontend app-frontend=${IMAGE_FRONTEND}@${{ needs.build-push-frontend.outputs.digest }} --record=true
+          fi
 
       - name: Patch services to LoadBalancer
         run: |
@@ -175,12 +170,10 @@ jobs:
         run: |
           set -e
           NS="$KUBE_NS"
-          # wait frontend
           for i in $(seq 1 60); do
             FIP=$(kubectl -n "$NS" get svc app-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
             [ -n "$FIP" ] && break || sleep 5
           done
-          # wait backend
           for i in $(seq 1 60); do
             BIP=$(kubectl -n "$NS" get svc app-backend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
             [ -n "$BIP" ] && break || sleep 5
