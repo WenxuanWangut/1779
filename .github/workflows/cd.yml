@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DO_TOKEN: ${{ secrets.DO_TOKEN }}
-      DO_K8S_CLUSTER: ${{ secrets.DO_K8S_CLUSTER }}
+      DO_K8S_CLUSTER_ID: ${{ secrets.DO_K8S_CLUSTER_ID }}
       KUBE_CONTEXT: ${{ secrets.KUBE_CONTEXT }}
       KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
     steps:
@@ -124,25 +124,12 @@ jobs:
         with:
           token: ${{ env.DO_TOKEN }}
 
-      - name: Ensure jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Resolve DO cluster id
-        id: resolve
-        run: |
-          set -e
-          if [ -z "${DO_K8S_CLUSTER}" ]; then
-            echo "Empty DO_K8S_CLUSTER"; exit 1
-          fi
-          CID=$(doctl kubernetes cluster list -o json | jq -r --arg q "${DO_K8S_CLUSTER}" '.[] | select(.id==$q or .name==$q) | .id' | head -n1)
-          if [ -z "$CID" ]; then
-            echo "Could not find cluster by name or id: ${DO_K8S_CLUSTER}"; exit 1
-          fi
-          echo "CLUSTER_ID=$CID" >> $GITHUB_ENV
-          echo "Resolved cluster: $CID"
-
       - name: Fetch kubeconfig
-        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 900 "$CLUSTER_ID"
+        run: |
+          if [ -z "${DO_K8S_CLUSTER_ID}" ]; then
+            echo "Missing DO_K8S_CLUSTER_ID"; exit 1
+          fi
+          doctl kubernetes cluster kubeconfig save --expiry-seconds 900 "${DO_K8S_CLUSTER_ID}"
 
       - name: Use context
         if: ${{ env.KUBE_CONTEXT != '' }}
