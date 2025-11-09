@@ -142,13 +142,25 @@ jobs:
           echo "KUBE_NS=$NS" >> $GITHUB_ENV
           kubectl get ns "$NS" >/dev/null 2>&1 || kubectl create ns "$NS"
 
+      - name: Backend pre-clean (scale to 0 and purge leftovers)
+        run: |
+          set -e
+          kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=0 || true
+          kubectl -n "$KUBE_NS" wait --for=delete pod -l app=app-backend --timeout=120s || true
+          REMAIN=$(kubectl -n "$KUBE_NS" get pod -l app=app-backend -o name || true)
+          if [ -n "$REMAIN" ]; then
+            kubectl -n "$KUBE_NS" delete $REMAIN --force --grace-period=0 || true
+          fi
+
       - name: Apply kustomize overlay (allow out-of-tree refs)
         run: |
           kubectl kustomize --load-restrictor=LoadRestrictionsNone k8s/overlays/prod | \
           kubectl -n "$KUBE_NS" apply -f -
 
-      - name: Enforce backend single replica
-        run: kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=1 || true
+      - name: Patch services to LoadBalancer
+        run: |
+          kubectl -n "$KUBE_NS" patch svc app-frontend -p '{"spec":{"type":"LoadBalancer"}}' || true
+          kubectl -n "$KUBE_NS" patch svc app-backend -p '{"spec":{"type":"LoadBalancer"}}' || true
 
       - name: Set images by digest
         run: |
@@ -159,10 +171,8 @@ jobs:
             kubectl -n "$KUBE_NS" set image deploy/app-frontend app-frontend=${IMAGE_FRONTEND}@${{ needs.build-push-frontend.outputs.digest }} --record=true
           fi
 
-      - name: Patch services to LoadBalancer
-        run: |
-          kubectl -n "$KUBE_NS" patch svc app-frontend -p '{"spec":{"type":"LoadBalancer"}}' || true
-          kubectl -n "$KUBE_NS" patch svc app-backend -p '{"spec":{"type":"LoadBalancer"}}' || true
+      - name: Scale backend up to 1
+        run: kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=1
 
       - name: Rollout status
         run: |
