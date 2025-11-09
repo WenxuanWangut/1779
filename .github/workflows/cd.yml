@@ -190,11 +190,6 @@ jobs:
           kubectl kustomize --load-restrictor=LoadRestrictionsNone k8s/overlays/prod | \
           kubectl -n "$KUBE_NS" apply -f -
 
-      - name: Patch services to LoadBalancer
-        run: |
-          kubectl -n "$KUBE_NS" patch svc app-frontend -p '{"spec":{"type":"LoadBalancer"}}' || true
-          kubectl -n "$KUBE_NS" patch svc app-backend -p '{"spec":{"type":"LoadBalancer"}}' || true
-
       - name: Set images by digest
         run: |
           if [ "${{ needs.detect.outputs.backend }}" = "true" ] && [ -n "${{ needs.build-push-backend.outputs.digest }}" ]; then
@@ -257,21 +252,18 @@ jobs:
           done
           kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=120s
 
-      - name: Wait for LBs ready and print URLs
+      - name: Wait for LB ready and print URL
         id: wait
         run: |
           set -e
           NS="$KUBE_NS"
           for i in $(seq 1 120); do
             FIP=$(kubectl -n "$NS" get svc app-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-            BIP=$(kubectl -n "$NS" get svc app-backend  -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-            if [ -n "$FIP" ] && [ -n "$BIP" ]; then break; fi
+            if [ -n "$FIP" ]; then break; fi
             sleep 5
           done
           echo "FRONTEND_IP=$FIP" >> $GITHUB_OUTPUT
-          echo "BACKEND_IP=$BIP" >> $GITHUB_OUTPUT
           echo "Frontend: http://$FIP/"
-          echo "Backend:  http://$BIP:8000/"
           for i in $(seq 1 60); do
             EP=$(kubectl -n "$NS" get endpoints app-frontend -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null || true)
             if [ -n "$EP" ]; then break; fi
