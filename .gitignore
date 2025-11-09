@@ -33,3 +33,7 @@ lerna-debug.log*
 
 # OS
 Thumbs.db
+
+# env
+/.note
+/k8s/k8s-1779project-kubeconfig.yaml
