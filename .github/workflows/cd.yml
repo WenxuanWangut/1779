@@ -102,6 +102,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   deploy:
+    if: ${{ always() }}
     needs: [build-push-backend, build-push-frontend, detect]
     runs-on: ubuntu-latest
     steps:
@@ -115,18 +116,38 @@ jobs:
         with:
           kustomize-version: v5.4.1
 
-      - name: Write kubeconfig
+      - name: Setup doctl
+        if: ${{ secrets.DO_TOKEN && secrets.DO_K8S_CLUSTER }}
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
+
+      - name: Fetch kubeconfig from DigitalOcean
+        if: ${{ secrets.DO_TOKEN && secrets.DO_K8S_CLUSTER }}
+        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 "$DO_K8S_CLUSTER"
+        env:
+          DO_K8S_CLUSTER: ${{ secrets.DO_K8S_CLUSTER }}
+
+      - name: Write kubeconfig from secret
+        if: ${{ !secrets.DO_TOKEN || !secrets.DO_K8S_CLUSTER }}
         run: |
           mkdir -p $HOME/.kube
           echo "${KUBE_CONFIG_DATA}" | base64 -d > $HOME/.kube/config
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
 
+      - name: Use context
+        if: ${{ secrets.KUBE_CONTEXT }}
+        run: kubectl config use-context "${KUBE_CONTEXT}"
+        env:
+          KUBE_CONTEXT: ${{ secrets.KUBE_CONTEXT }}
+
       - name: Namespace
         run: |
           NS="${{ secrets.KUBE_NAMESPACE }}"
           if [ -z "$NS" ]; then NS=default; fi
           echo "KUBE_NS=$NS" >> $GITHUB_ENV
+          kubectl get ns "$NS" >/dev/null 2>&1 || kubectl create ns "$NS"
 
       - name: Pin images by digest
         working-directory: k8s/overlays/prod
@@ -144,6 +165,13 @@ jobs:
           kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=180s
           kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=180s
 
-      - name: Migrate
+      - name: Patch services to LoadBalancer
         run: |
-          kubectl -n "$KUBE_NS" exec deploy/app-backend -- python manage.py migrate --noinput
+          kubectl -n "$KUBE_NS" patch svc app-frontend -p '{"spec":{"type":"LoadBalancer"}}' || true
+          kubectl -n "$KUBE_NS" patch svc app-backend -p '{"spec":{"type":"LoadBalancer"}}' || true
+
+      - name: Get services
+        run: kubectl -n "$KUBE_NS" get svc
+
+      - name: Migrate
+        run: kubectl -n "$KUBE_NS" exec deploy/app-backend -- python manage.py migrate --noinput
