@@ -124,8 +124,25 @@ jobs:
         with:
           token: ${{ env.DO_TOKEN }}
 
-      - name: Fetch kubeconfig from DigitalOcean
-        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 900 "$DO_K8S_CLUSTER"
+      - name: Ensure jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Resolve DO cluster id
+        id: resolve
+        run: |
+          set -e
+          if [ -z "${DO_K8S_CLUSTER}" ]; then
+            echo "Empty DO_K8S_CLUSTER"; exit 1
+          fi
+          CID=$(doctl kubernetes cluster list -o json | jq -r --arg q "${DO_K8S_CLUSTER}" '.[] | select(.id==$q or .name==$q) | .id' | head -n1)
+          if [ -z "$CID" ]; then
+            echo "Could not find cluster by name or id: ${DO_K8S_CLUSTER}"; exit 1
+          fi
+          echo "CLUSTER_ID=$CID" >> $GITHUB_ENV
+          echo "Resolved cluster: $CID"
+
+      - name: Fetch kubeconfig
+        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 900 "$CLUSTER_ID"
 
       - name: Use context
         if: ${{ env.KUBE_CONTEXT != '' }}
@@ -138,20 +155,20 @@ jobs:
           echo "KUBE_NS=$NS" >> $GITHUB_ENV
           kubectl get ns "$NS" >/dev/null 2>&1 || kubectl create ns "$NS"
 
-      - name: Apply base manifests
+      - name: Apply kustomize overlay (allow out-of-tree refs)
         run: |
-          kubectl -n "$KUBE_NS" apply -k k8s/overlays/prod
+          kubectl kustomize --load-restrictor=LoadRestrictionsNone k8s/overlays/prod | \
+          kubectl -n "$KUBE_NS" apply -f -
 
       - name: Enforce backend single replica
-        run: |
-          kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=1 || true
+        run: kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=1 || true
 
       - name: Set images by digest
         run: |
-          if [ "${{ needs.detect.outputs.backend }}" = "true" ]; then
+          if [ "${{ needs.detect.outputs.backend }}" = "true" ] && [ -n "${{ needs.build-push-backend.outputs.digest }}" ]; then
             kubectl -n "$KUBE_NS" set image deploy/app-backend app-backend=${IMAGE_BACKEND}@${{ needs.build-push-backend.outputs.digest }} --record=true
           fi
-          if [ "${{ needs.detect.outputs.frontend }}" = "true" ]; then
+          if [ "${{ needs.detect.outputs.frontend }}" = "true" ] && [ -n "${{ needs.build-push-frontend.outputs.digest }}" ]; then
             kubectl -n "$KUBE_NS" set image deploy/app-frontend app-frontend=${IMAGE_FRONTEND}@${{ needs.build-push-frontend.outputs.digest }} --record=true
           fi
 
