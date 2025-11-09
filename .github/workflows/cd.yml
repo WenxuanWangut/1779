@@ -100,11 +100,18 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_BASE=/api
 
   deploy:
     if: ${{ always() }}
     needs: [build-push-backend, build-push-frontend, detect]
     runs-on: ubuntu-latest
+    env:
+      DO_TOKEN: ${{ secrets.DO_TOKEN }}
+      DO_K8S_CLUSTER: ${{ secrets.DO_K8S_CLUSTER }}
+      KUBE_CONTEXT: ${{ secrets.KUBE_CONTEXT }}
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
     steps:
       - uses: actions/checkout@v4
 
@@ -117,35 +124,21 @@ jobs:
           kustomize-version: v5.4.1
 
       - name: Setup doctl
-        if: ${{ secrets.DO_TOKEN && secrets.DO_K8S_CLUSTER }}
         uses: digitalocean/action-doctl@v2
         with:
-          token: ${{ secrets.DO_TOKEN }}
+          token: ${{ env.DO_TOKEN }}
 
       - name: Fetch kubeconfig from DigitalOcean
-        if: ${{ secrets.DO_TOKEN && secrets.DO_K8S_CLUSTER }}
-        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 "$DO_K8S_CLUSTER"
-        env:
-          DO_K8S_CLUSTER: ${{ secrets.DO_K8S_CLUSTER }}
+        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 900 "$DO_K8S_CLUSTER"
 
-      - name: Write kubeconfig from secret
-        if: ${{ !secrets.DO_TOKEN || !secrets.DO_K8S_CLUSTER }}
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${KUBE_CONFIG_DATA}" | base64 -d > $HOME/.kube/config
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-
-      - name: Use context
-        if: ${{ secrets.KUBE_CONTEXT }}
+      - name: Use context (optional)
+        if: ${{ env.KUBE_CONTEXT != '' }}
         run: kubectl config use-context "${KUBE_CONTEXT}"
-        env:
-          KUBE_CONTEXT: ${{ secrets.KUBE_CONTEXT }}
 
-      - name: Namespace
+      - name: Ensure namespace exists
         run: |
-          NS="${{ secrets.KUBE_NAMESPACE }}"
-          if [ -z "$NS" ]; then NS=default; fi
+          NS="${KUBE_NAMESPACE}"
+          if [ -z "$NS" ]; then NS=cloudcollab; fi
           echo "KUBE_NS=$NS" >> $GITHUB_ENV
           kubectl get ns "$NS" >/dev/null 2>&1 || kubectl create ns "$NS"
 
@@ -159,19 +152,44 @@ jobs:
             kustomize edit set image app-frontend=${{ env.IMAGE_FRONTEND }}@${{ needs.build-push-frontend.outputs.digest }}
           fi
 
-      - name: Apply
+      - name: Apply kustomize
         run: |
           kubectl -n "$KUBE_NS" apply -k k8s/overlays/prod
-          kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=180s
-          kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=180s
+
+      - name: Enforce backend single replica
+        run: |
+          kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=1 || true
 
       - name: Patch services to LoadBalancer
         run: |
           kubectl -n "$KUBE_NS" patch svc app-frontend -p '{"spec":{"type":"LoadBalancer"}}' || true
           kubectl -n "$KUBE_NS" patch svc app-backend -p '{"spec":{"type":"LoadBalancer"}}' || true
 
-      - name: Get services
-        run: kubectl -n "$KUBE_NS" get svc
+      - name: Rollout status
+        run: |
+          kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=300s
+          kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=300s
 
-      - name: Migrate
-        run: kubectl -n "$KUBE_NS" exec deploy/app-backend -- python manage.py migrate --noinput
+      - name: Wait for External IPs and print URLs
+        id: svc
+        run: |
+          set -e
+          NS="$KUBE_NS"
+          # wait frontend
+          for i in $(seq 1 60); do
+            FIP=$(kubectl -n "$NS" get svc app-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            [ -n "$FIP" ] && break || sleep 5
+          done
+          # wait backend
+          for i in $(seq 1 60); do
+            BIP=$(kubectl -n "$NS" get svc app-backend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            [ -n "$BIP" ] && break || sleep 5
+          done
+          echo "FRONTEND_IP=$FIP" >> $GITHUB_OUTPUT
+          echo "BACKEND_IP=$BIP" >> $GITHUB_OUTPUT
+          echo "Frontend: http://$FIP/"
+          echo "Backend:  http://$BIP:8000/"
+
+      - name: Smoke check (frontend)
+        if: ${{ steps.svc.outputs.FRONTEND_IP != '' }}
+        run: curl -fsS "http://${{ steps.svc.outputs.FRONTEND_IP }}/" | head -c 200 || true
