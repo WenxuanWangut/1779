@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -e
-FRONTEND_ORIGIN="${FRONTEND_ORIGIN%/}"
-BACKEND_ORIGIN="${BACKEND_ORIGIN%/}"
-export FRONTEND_ORIGIN BACKEND_ORIGIN
-envsubst '${FRONTEND_ORIGIN} ${BACKEND_ORIGIN}' < /etc/nginx/templates/nginx.conf.tmpl > /etc/nginx/nginx.conf
+envsubst '${PORT} ${SERVER_NAME} ${FRONTEND_HOSTPORT} ${PROXY_CONNECT_TIMEOUT} ${PROXY_READ_TIMEOUT}' \
+  < /etc/nginx/templates/nginx.conf.tmpl > /etc/nginx/nginx.conf
 nginx -g 'daemon off;'
