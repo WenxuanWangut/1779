@@ -1,0 +1,25 @@
+name: cloudcollab
+region: tor
+services:
+  - name: edge
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 8080
+    image:
+      registry_type: DOCR
+      registry: cloudcollab
+      repository: edge
+      tag: latest
+    health_check:
+      http_path: /healthz
+    envs:
+      - key: FRONTEND_ORIGIN
+        scope: RUN_TIME
+        value: "http://209.38.2.144/"
+ingress:
+  rules:
+    - component:
+        name: edge
+      match:
+        path:
+          prefix: /
