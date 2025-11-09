@@ -2,13 +2,15 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app-backend
+  labels:
+    app: app-backend
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: app-backend
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
@@ -17,26 +19,34 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
         - name: app-backend
-          image: app-backend:local
-          imagePullPolicy: IfNotPresent
-          env:
-            - name: DJANGO_ALLOWED_HOSTS
-              value: "*"
-            - name: DJANGO_DEBUG
-              value: "False"
-            - name: PORT
-              value: "8000"
+          image: app-backend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+            - name: WEB_CONCURRENCY
+              value: "1"
           readinessProbe:
             httpGet:
               path: /healthz
               port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            timeoutSeconds: 1
+            failureThreshold: 60
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            periodSeconds: 2
+            failureThreshold: 60

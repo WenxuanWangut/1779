@@ -145,7 +145,7 @@ jobs:
       - name: Ensure jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Patch strategy to Recreate + shorten grace (backend & frontend)
+      - name: Patch strategy to Recreate + shorten grace
         run: |
           for DEP in app-backend app-frontend; do
             kubectl -n "$KUBE_NS" patch deploy/$DEP --type='json' -p='[{"op":"remove","path":"/spec/strategy/rollingUpdate"}]' || true
@@ -153,7 +153,7 @@ jobs:
             kubectl -n "$KUBE_NS" patch deploy/$DEP --type='merge' -p='{"spec":{"template":{"spec":{"terminationGracePeriodSeconds":5}}}}' || true
           done
 
-      - name: Pre-clean backend (scale 0 & purge)
+      - name: Pre-clean backend
         run: |
           kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=0 || true
           kubectl -n "$KUBE_NS" wait --for=delete pod -l app=app-backend --timeout=120s || true
@@ -162,7 +162,7 @@ jobs:
             kubectl -n "$KUBE_NS" delete pod $PODS --force --grace-period=0 || true
           fi
 
-      - name: Pre-clean frontend (scale 0 & purge)
+      - name: Pre-clean frontend
         run: |
           kubectl -n "$KUBE_NS" scale deploy/app-frontend --replicas=0 || true
           kubectl -n "$KUBE_NS" wait --for=delete pod -l app=app-frontend --timeout=120s || true
@@ -199,41 +199,49 @@ jobs:
         run: |
           set -e
           rescue() {
-            PODS=$(kubectl -n "$KUBE_NS" get pod -l app=app-backend -o json | jq -r '.items[] | select(.metadata.deletionTimestamp != null) | .metadata.name' || true)
-            if [ -n "$PODS" ]; then
-              kubectl -n "$KUBE_NS" delete pod $PODS --force --grace-period=0 || true
-            fi
+            kubectl -n "$KUBE_NS" get pods -l app=app-backend -o wide || true
+            kubectl -n "$KUBE_NS" describe deploy/app-backend || true
+            PODS=$(kubectl -n "$KUBE_NS" get pod -l app=app-backend -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
+            for p in $PODS; do
+              kubectl -n "$KUBE_NS" describe pod "$p" || true
+              kubectl -n "$KUBE_NS" logs "$p" --tail=200 || true
+            done
+            TP=$(kubectl -n "$KUBE_NS" get pod -l app=app-backend -o jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}' 2>/dev/null || true)
+            [ -n "$TP" ] && kubectl -n "$KUBE_NS" delete pod $TP --force --grace-period=0 || true
           }
-          for i in $(seq 1 5); do
+          for i in $(seq 1 10); do
             set +e
-            kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=60s
+            kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=120s
             rc=$?
             set -e
             [ $rc -eq 0 ] && break
             rescue
             sleep 5
           done
-          kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=60s
+          kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=120s
 
       - name: Rollout frontend with rescue
         run: |
           set -e
           rescue() {
-            PODS=$(kubectl -n "$KUBE_NS" get pod -l app=app-frontend -o json | jq -r '.items[] | select(.metadata.deletionTimestamp != null) | .metadata.name' || true)
-            if [ -n "$PODS" ]; then
-              kubectl -n "$KUBE_NS" delete pod $PODS --force --grace-period=0 || true
-            fi
+            PODS=$(kubectl -n "$KUBE_NS" get pod -l app=app-frontend -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
+            for p in $PODS; do
+              kubectl -n "$KUBE_NS" describe pod "$p" || true
+              kubectl -n "$KUBE_NS" logs "$p" --tail=200 || true
+            done
+            TP=$(kubectl -n "$KUBE_NS" get pod -l app=app-frontend -o jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}' 2>/dev/null || true)
+            [ -n "$TP" ] && kubectl -n "$KUBE_NS" delete pod $TP --force --grace-period=0 || true
           }
-          for i in $(seq 1 5); do
+          for i in $(seq 1 10); do
             set +e
-            kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=60s
+            kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=120s
             rc=$?
             set -e
             [ $rc -eq 0 ] && break
             rescue
             sleep 5
           done
-          kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=60s
+          kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=120s
 
       - name: Wait for LBs ready and print URLs
         id: wait
