@@ -1,15 +1,30 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useMemo } from 'react'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 const UIContext = createContext(null)
 
 export function UIProvider({ children }){
-  const [toasts, setToasts] = useState([])
-  const pushToast = (msg, type = 'success') => {
-    const id = Date.now() + Math.random()
-    setToasts((t) => [...t, { id, msg, type }])
-  }
-  const removeToast = (id) => setToasts((t) => t.filter(x => x.id !== id))
-  return <UIContext.Provider value={{ toasts, pushToast, removeToast }}>{children}</UIContext.Provider>
+  const value = useMemo(() => ({
+    pushToast: (msg, type = 'success') => {
+      const fn = type === 'success' ? toast.success
+        : type === 'error' ? toast.error
+        : type === 'info' ? toast.info
+        : type === 'warn' || type === 'warning' ? toast.warn
+        : toast
+      const id = fn(msg)
+      return id
+    },
+    removeToast: (id) => toast.dismiss(id),
+    toasts: []
+  }), [])
+
+  return (
+    <UIContext.Provider value={value}>
+      {children}
+      <ToastContainer position="bottom-right" newestOnTop limit={3} closeButton={false} closeOnClick />
+    </UIContext.Provider>
+  )
 }
 
 export default function useUI(){ return useContext(UIContext) }
