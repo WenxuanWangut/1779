@@ -2,11 +2,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: app-backend
+  annotations:
+    kubernetes.digitalocean.com/healthcheck-protocol: "http"
+    kubernetes.digitalocean.com/healthcheck-path: "/healthz"
+    kubernetes.digitalocean.com/healthcheck-port: "8000"
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: app-backend
   ports:
-    - port: 8000
+    - name: http
+      port: 8000
       targetPort: 8000
-      nodePort: 30080

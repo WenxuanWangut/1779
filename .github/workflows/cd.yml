@@ -142,17 +142,36 @@ jobs:
           echo "KUBE_NS=$NS" >> $GITHUB_ENV
           kubectl get ns "$NS" >/dev/null 2>&1 || kubectl create ns "$NS"
 
-      - name: Backend pre-clean (scale to 0 and purge leftovers)
+      - name: Ensure jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Patch strategy to Recreate + shorten grace (backend & frontend)
         run: |
-          set -e
+          for DEP in app-backend app-frontend; do
+            kubectl -n "$KUBE_NS" patch deploy/$DEP --type='json' -p='[{"op":"remove","path":"/spec/strategy/rollingUpdate"}]' || true
+            kubectl -n "$KUBE_NS" patch deploy/$DEP --type='merge' -p='{"spec":{"strategy":{"type":"Recreate"}}}' || true
+            kubectl -n "$KUBE_NS" patch deploy/$DEP --type='merge' -p='{"spec":{"template":{"spec":{"terminationGracePeriodSeconds":5}}}}' || true
+          done
+
+      - name: Pre-clean backend (scale 0 & purge)
+        run: |
           kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=0 || true
           kubectl -n "$KUBE_NS" wait --for=delete pod -l app=app-backend --timeout=120s || true
-          REMAIN=$(kubectl -n "$KUBE_NS" get pod -l app=app-backend -o name || true)
-          if [ -n "$REMAIN" ]; then
-            kubectl -n "$KUBE_NS" delete $REMAIN --force --grace-period=0 || true
+          PODS=$(kubectl -n "$KUBE_NS" get pod -l app=app-backend -o json | jq -r '.items[]?.metadata.name' || true)
+          if [ -n "$PODS" ]; then
+            kubectl -n "$KUBE_NS" delete pod $PODS --force --grace-period=0 || true
           fi
 
-      - name: Apply kustomize overlay (allow out-of-tree refs)
+      - name: Pre-clean frontend (scale 0 & purge)
+        run: |
+          kubectl -n "$KUBE_NS" scale deploy/app-frontend --replicas=0 || true
+          kubectl -n "$KUBE_NS" wait --for=delete pod -l app=app-frontend --timeout=120s || true
+          PODS=$(kubectl -n "$KUBE_NS" get pod -l app=app-frontend -o json | jq -r '.items[]?.metadata.name' || true)
+          if [ -n "$PODS" ]; then
+            kubectl -n "$KUBE_NS" delete pod $PODS --force --grace-period=0 || true
+          fi
+
+      - name: Apply kustomize overlay
         run: |
           kubectl kustomize --load-restrictor=LoadRestrictionsNone k8s/overlays/prod | \
           kubectl -n "$KUBE_NS" apply -f -
@@ -171,32 +190,79 @@ jobs:
             kubectl -n "$KUBE_NS" set image deploy/app-frontend app-frontend=${IMAGE_FRONTEND}@${{ needs.build-push-frontend.outputs.digest }} --record=true
           fi
 
-      - name: Scale backend up to 1
-        run: kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=1
-
-      - name: Rollout status
+      - name: Scale up both
         run: |
-          kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=300s
-          kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=300s
+          kubectl -n "$KUBE_NS" scale deploy/app-backend --replicas=1 || true
+          kubectl -n "$KUBE_NS" scale deploy/app-frontend --replicas=1 || true
 
-      - name: Wait for External IPs and print URLs
-        id: svc
+      - name: Rollout backend with rescue
+        run: |
+          set -e
+          rescue() {
+            PODS=$(kubectl -n "$KUBE_NS" get pod -l app=app-backend -o json | jq -r '.items[] | select(.metadata.deletionTimestamp != null) | .metadata.name' || true)
+            if [ -n "$PODS" ]; then
+              kubectl -n "$KUBE_NS" delete pod $PODS --force --grace-period=0 || true
+            fi
+          }
+          for i in $(seq 1 5); do
+            set +e
+            kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=60s
+            rc=$?
+            set -e
+            [ $rc -eq 0 ] && break
+            rescue
+            sleep 5
+          done
+          kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=60s
+
+      - name: Rollout frontend with rescue
+        run: |
+          set -e
+          rescue() {
+            PODS=$(kubectl -n "$KUBE_NS" get pod -l app=app-frontend -o json | jq -r '.items[] | select(.metadata.deletionTimestamp != null) | .metadata.name' || true)
+            if [ -n "$PODS" ]; then
+              kubectl -n "$KUBE_NS" delete pod $PODS --force --grace-period=0 || true
+            fi
+          }
+          for i in $(seq 1 5); do
+            set +e
+            kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=60s
+            rc=$?
+            set -e
+            [ $rc -eq 0 ] && break
+            rescue
+            sleep 5
+          done
+          kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=60s
+
+      - name: Wait for LBs ready and print URLs
+        id: wait
         run: |
           set -e
           NS="$KUBE_NS"
-          for i in $(seq 1 60); do
+          for i in $(seq 1 120); do
             FIP=$(kubectl -n "$NS" get svc app-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-            [ -n "$FIP" ] && break || sleep 5
-          done
-          for i in $(seq 1 60); do
-            BIP=$(kubectl -n "$NS" get svc app-backend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-            [ -n "$BIP" ] && break || sleep 5
+            BIP=$(kubectl -n "$NS" get svc app-backend  -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            if [ -n "$FIP" ] && [ -n "$BIP" ]; then break; fi
+            sleep 5
           done
           echo "FRONTEND_IP=$FIP" >> $GITHUB_OUTPUT
           echo "BACKEND_IP=$BIP" >> $GITHUB_OUTPUT
           echo "Frontend: http://$FIP/"
           echo "Backend:  http://$BIP:8000/"
+          for i in $(seq 1 60); do
+            EP=$(kubectl -n "$NS" get endpoints app-frontend -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null || true)
+            if [ -n "$EP" ]; then break; fi
+            sleep 5
+          done
+          for i in $(seq 1 60); do
+            if curl -fsS --connect-timeout 5 "http://$FIP/healthz" >/dev/null 2>&1; then
+              break
+            fi
+            sleep 5
+          done
 
       - name: Smoke check (frontend)
-        if: ${{ steps.svc.outputs.FRONTEND_IP != '' }}
-        run: curl -fsS "http://${{ steps.svc.outputs.FRONTEND_IP }}/" | head -c 200 || true
+        if: ${{ steps.wait.outputs.FRONTEND_IP != '' }}
+        run: |
+          curl -fsS "http://${{ steps.wait.outputs.FRONTEND_IP }}/" | head -c 200

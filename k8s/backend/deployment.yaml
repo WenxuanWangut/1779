@@ -7,11 +7,14 @@ spec:
   selector:
     matchLabels:
       app: app-backend
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
         app: app-backend
     spec:
+      terminationGracePeriodSeconds: 5
       containers:
         - name: app-backend
           image: app-backend:local
