@@ -34,6 +34,9 @@ lerna-debug.log*
 # OS
 Thumbs.db
 
+#.pyc
+__pycache__/
+
 # env
 /.note
 /k8s/k8s-1779project-kubeconfig.yaml

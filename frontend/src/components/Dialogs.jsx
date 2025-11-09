@@ -1,8 +1,14 @@
 import React, { useState } from 'react'
 import ModalDialog, { ModalBody, ModalFooter, ModalHeader } from '@atlaskit/modal-dialog'
+// import ModalDialog from '@atlaskit/modal-dialog/modal-dialog';
+// import ModalHeader from '@atlaskit/modal-dialog/modal-header';
+// import ModalBody from '@atlaskit/modal-dialog/modal-body';
+// import ModalFooter from '@atlaskit/modal-dialog/modal-footer';
 import Button from '@atlaskit/button'
 import Form, { Field } from '@atlaskit/form'
 import Textfield from '@atlaskit/textfield'
+
+console.log("ModalDialog is:", ModalDialog);
 
 export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel, confirmLabel = 'Confirm', cancelLabel = 'Cancel', appearance = 'danger' }) {
   if (!isOpen) return null
@@ -25,6 +31,8 @@ export function PromptDialog({ isOpen, title, message, onSubmit, onCancel, submi
   const [value, setValue] = useState(defaultValue)
 
   if (!isOpen) return null
+
+  console.log("ModalDialog portal target:", document.querySelectorAll("[id*='portal'],[id*='modal'],[id*='layer']"));
 
   return (
     <ModalDialog onClose={onCancel}>

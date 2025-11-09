@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Button from '@atlaskit/button'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTicket, updateTicket, deleteTicket } from '../../api/tickets.js'
@@ -26,6 +26,8 @@ const STATUS_LABELS = {
 export default function TicketDetail(){
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const fromProjectId = location.state?.fromProjectId
   const { pushToast } = useUI()
   const qc = useQueryClient()
   const [activeModal, setActiveModal] = useState(null) // 'edit', 'delete', or null
@@ -68,7 +70,10 @@ export default function TicketDetail(){
     onSuccess: () => {
       qc.invalidateQueries(['tickets'])
       pushToast('Ticket deleted successfully!')
-      navigate('/')
+      //navigate('/')
+      if (fromProjectId) navigate(`/projects/${fromProjectId}`)
+      else if (ticket?.project?.id) navigate(`/projects/${ticket.project.id}`)
+      else navigate('/projects')
     },
     onError: (err) => pushToast(`Failed to delete ticket: ${err.message}`, 'error')
   })
@@ -93,7 +98,11 @@ export default function TicketDetail(){
     <div>
       <div style={{marginBottom: 24}}>
         <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 8}}>
-          <Button appearance="subtle" onClick={() => navigate('/')}>← Back</Button>
+          <Button appearance="subtle" onClick={() => {
+            if (fromProjectId) navigate(`/projects/${fromProjectId}`)
+            else if (ticket?.project?.id) navigate(`/projects/${ticket.project.id}`)
+            else navigate(-1)   // final fallback
+            }}>← Back</Button>
           <h2 style={{margin: 0}}>Ticket #{ticket.id}</h2>
           <Lozenge appearance={STATUS_COLORS[ticket.status] || 'default'}>
             {STATUS_LABELS[ticket.status] || ticket.status}
