@@ -5,11 +5,11 @@ resources:
   - ../../frontend/service.yaml
 images:
   - name: app-backend
-    newName: docker.io/penguinofmadagascar/app-backend
-    newTag: release
+    newName: ghcr.io/wenxuanwangut/app-backend
+    newTag: latest
   - name: app-frontend
-    newName: docker.io/penguinofmadagascar/app-frontend
-    newTag: release
+    newName: ghcr.io/wenxuanwangut/app-frontend
+    newTag: latest
 patches:
   - path: deployment-backend-patch.yaml
   - path: deployment-frontend-patch.yaml
