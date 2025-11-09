@@ -1,16 +1,26 @@
 import React from 'react'
 import { SideNavigation, Section, HeadingItem, NestableNavigationContent, NavigationFooter, ButtonItem } from '@atlaskit/side-navigation'
 import { useLocation, useNavigate } from 'react-router-dom'
+import Button from "@atlaskit/button";
+import useAuth from "../hooks/useAuth.js";
 
 export default function SideNav(){
   const location = useLocation()
   const navigate = useNavigate()
-  
+  const { user, logout } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login')
+  }
+
   return (
     <SideNavigation label="CloudCollab Navigation">
       <NestableNavigationContent>
         <Section>
-          <HeadingItem>Main</HeadingItem>
+          <HeadingItem>
+            <span style={{fontSize: 16}}>{user?.name || user?.email || 'User'}</span>
+          </HeadingItem>
           <ButtonItem 
             onClick={() => navigate('/')}
             isSelected={location.pathname === '/'}
@@ -26,7 +36,7 @@ export default function SideNav(){
         </Section>
       </NestableNavigationContent>
       <NavigationFooter>
-        <div style={{padding: 8, fontSize: 12}}>© CloudCollab</div>
+        <Button appearance="primary" onClick={handleLogout} shouldFitContainer>Logout</Button>
       </NavigationFooter>
     </SideNavigation>
   )
