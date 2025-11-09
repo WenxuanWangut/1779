@@ -21,6 +21,7 @@
     "@atlaskit/modal-dialog": "^14.6.0",
     "@atlaskit/page-layout": "^4.2.18",
     "@atlaskit/pagination": "^16.1.15",
+    "@atlaskit/portal": "^5.1.8",
     "@atlaskit/select": "^21.3.8",
     "@atlaskit/side-navigation": "^11.0.23",
     "@atlaskit/textarea": "^8.0.13",

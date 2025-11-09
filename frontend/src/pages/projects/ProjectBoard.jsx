@@ -82,6 +82,10 @@ export default function ProjectBoard(){
     }
   })
 
+  useEffect(() => {
+    setSocketConnected(true)
+  }, [])
+
   async function onReorder({ id: ticketId, from, to, oldStatus, newStatus }){
     try {
       // Update status if changed
@@ -116,7 +120,7 @@ export default function ProjectBoard(){
   }
 
   function handleTicketClick(ticket){
-    navigate(`/tickets/${ticket.id}`)
+    navigate(`/tickets/${ticket.id}`, { state: { from: 'project', projectId: id } })
   }
 
   async function onEdit(ticket){

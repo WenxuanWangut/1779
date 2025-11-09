@@ -12,6 +12,7 @@ export default function ProjectsList(){
   const qc = useQueryClient()
   const [q, setQ] = useState('')
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  console.log('showCreateDialog =', showCreateDialog)
   const [deleteDialog, setDeleteDialog] = useState({ open: false, project: null })
   const { pushToast } = useUI()
   
@@ -76,7 +77,7 @@ export default function ProjectsList(){
         </div>
         <Button 
           appearance="primary"
-          onClick={() => setShowCreateDialog(true)} 
+          onClick={() => { console.log('clicked New Project'); setShowCreateDialog(true); }}
           isDisabled={createMut.isPending}
         >
           {createMut.isPending ? 'Creating...' : 'New Project'}
