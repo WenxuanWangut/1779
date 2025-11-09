@@ -3,7 +3,6 @@ resources:
   - ../../backend/service.yaml
   - ../../frontend/deployment.yaml
   - ../../frontend/service.yaml
-  - frontend-proxy-configmap.yaml
 images:
   - name: app-backend
     newName: docker.io/penguinofmadagascar/app-backend
@@ -14,5 +13,3 @@ images:
 patches:
   - path: deployment-backend-patch.yaml
   - path: deployment-frontend-patch.yaml
-  - path: edge/patch-app-frontend-deploy.yaml
-  - path: edge/patch-app-frontend-svc.yaml
