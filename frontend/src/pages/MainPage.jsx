@@ -1,7 +1,7 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import { listTickets } from '../api/tickets.js'
 import useAuth from '../hooks/useAuth.js'
 import useUI from '../context/UIContext.jsx'

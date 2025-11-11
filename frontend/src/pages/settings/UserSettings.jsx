@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import Form, { Field } from '@atlaskit/form'
 import Textfield from '@atlaskit/textfield'
 import useAuth from '../../hooks/useAuth.js'

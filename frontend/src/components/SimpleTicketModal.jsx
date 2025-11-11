@@ -4,7 +4,7 @@ import Textfield from '@atlaskit/textfield'
 import Textarea from '@atlaskit/textarea'
 import Select from '@atlaskit/select'
 import SimpleModal from './SimpleModal.jsx'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 
 const STATUS_OPTIONS = [
   { label: 'To Do', value: 'TODO' },

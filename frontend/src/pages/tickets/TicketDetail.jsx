@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getTicket, updateTicket, deleteTicket } from '../../api/tickets.js'
 import SimpleTicketModal from '../../components/SimpleTicketModal.jsx'

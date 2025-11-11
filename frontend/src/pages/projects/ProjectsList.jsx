@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { listProjects, createProject, deleteProject } from '../../api/projects.js'
 import { Link } from 'react-router-dom'

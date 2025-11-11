@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import Select from '@atlaskit/select'
 import Textfield from '@atlaskit/textfield'
 import Badge from '@atlaskit/badge'

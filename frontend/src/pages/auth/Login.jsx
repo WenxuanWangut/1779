@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import Textfield from '@atlaskit/textfield'
 import useAuth from '../../hooks/useAuth.js'
 import { useNavigate } from 'react-router-dom'

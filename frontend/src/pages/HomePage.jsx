@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import { useQuery } from '@tanstack/react-query'
 import { listTickets } from '../api/tickets.js'
 import SearchBar from '../components/SearchBar.jsx'

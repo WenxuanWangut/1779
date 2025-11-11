@@ -1,5 +1,5 @@
 import React from 'react'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import { useNavigate, Link } from 'react-router-dom'
 import useUI from '../../context/UIContext.jsx'
 

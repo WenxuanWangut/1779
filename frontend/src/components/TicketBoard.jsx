@@ -2,7 +2,7 @@ import React from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import Lozenge from '@atlaskit/lozenge'
 import Badge from '@atlaskit/badge'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import EmptyState from './EmptyState.jsx'
 
 // Ticket status colors

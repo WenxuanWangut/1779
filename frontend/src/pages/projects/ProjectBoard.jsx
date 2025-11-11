@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import TicketBoard from '../../components/TicketBoard.jsx'
 import TicketModal from '../../components/TicketModal.jsx'
 import TicketFilters from '../../components/TicketFilters.jsx'

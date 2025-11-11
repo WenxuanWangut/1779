@@ -1,6 +1,6 @@
 import React from 'react'
 import ModalDialog, { ModalBody, ModalFooter, ModalHeader } from '@atlaskit/modal-dialog'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 import Lozenge from '@atlaskit/lozenge'
 import Avatar from '@atlaskit/avatar'
 import { formatDate, formatRelativeTime } from '../utils/formatters.js'

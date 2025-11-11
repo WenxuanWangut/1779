@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import Button from '@atlaskit/button'
+import Button from '@atlaskit/button/new'
 
 /**
  * Simple Modal component that avoids Portal conflicts
