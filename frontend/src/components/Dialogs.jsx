@@ -1,68 +1,133 @@
-import React, { useState } from 'react'
-import ModalDialog, { ModalBody, ModalFooter, ModalHeader } from '@atlaskit/modal-dialog'
-// import ModalDialog from '@atlaskit/modal-dialog/modal-dialog';
-// import ModalHeader from '@atlaskit/modal-dialog/modal-header';
-// import ModalBody from '@atlaskit/modal-dialog/modal-body';
-// import ModalFooter from '@atlaskit/modal-dialog/modal-footer';
-import Button from '@atlaskit/button'
-import Form, { Field } from '@atlaskit/form'
-import Textfield from '@atlaskit/textfield'
+import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import '../styles/dialog.css'
 
-console.log("ModalDialog is:", ModalDialog);
+function ModalBase({ open, onClose, children }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose && onClose()
+    }
+    const original = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = original
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open, onClose])
 
-export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel, confirmLabel = 'Confirm', cancelLabel = 'Cancel', appearance = 'danger' }) {
-  if (!isOpen) return null
-
-  return (
-    <ModalDialog onClose={onCancel}>
-      <ModalHeader>{title}</ModalHeader>
-      <ModalBody>
-        <p>{message}</p>
-      </ModalBody>
-      <ModalFooter>
-        <Button appearance="subtle" onClick={onCancel}>{cancelLabel}</Button>
-        <Button appearance={appearance} onClick={onConfirm}>{confirmLabel}</Button>
-      </ModalFooter>
-    </ModalDialog>
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <div className="dlg-root">
+          <motion.div
+            className="dlg-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) onClose && onClose()
+            }}
+          />
+          <motion.div
+            className="dlg-panel"
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
+            {children}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body
   )
 }
 
-export function PromptDialog({ isOpen, title, message, onSubmit, onCancel, submitLabel = 'Submit', cancelLabel = 'Cancel', placeholder = '', defaultValue = '' }) {
-  const [value, setValue] = useState(defaultValue)
-
-  if (!isOpen) return null
-
-  console.log("ModalDialog portal target:", document.querySelectorAll("[id*='portal'],[id*='modal'],[id*='layer']"));
+export function ConfirmDialog({
+  isOpen,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  appearance = 'danger'
+}) {
+  const confirmClass =
+    appearance === 'danger'
+      ? 'dlg-btn dlg-btn-danger'
+      : 'dlg-btn dlg-btn-primary'
 
   return (
-    <ModalDialog onClose={onCancel}>
-      <ModalHeader>{title}</ModalHeader>
-      <Form onSubmit={(values) => {
-        onSubmit && onSubmit(values.input)
-        setValue('')
-      }}>
-        {({ formProps, submitting }) => (
-          <form {...formProps}>
-            <ModalBody>
-              <p>{message}</p>
-              <Field name="input" defaultValue={defaultValue} isRequired>
-                {({ fieldProps }) => (
-                  <Textfield 
-                    {...fieldProps} 
-                    placeholder={placeholder}
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                  />
-                )}
-              </Field>
-            </ModalBody>
-            <ModalFooter>
-              <Button appearance="subtle" onClick={onCancel} disabled={submitting}>{cancelLabel}</Button>
-              <Button type="submit" appearance="primary" disabled={submitting || !value.trim()}>{submitLabel}</Button>
-            </ModalFooter>
-          </form>
-        )}
-      </Form>
-    </ModalDialog>
+    <ModalBase open={isOpen} onClose={onCancel}>
+      <div className="dlg-header">{title}</div>
+      <div className="dlg-body">
+        <p className="dlg-text">{message}</p>
+      </div>
+      <div className="dlg-actions">
+        <button className="dlg-btn dlg-btn-subtle" onClick={onCancel}>
+          {cancelLabel}
+        </button>
+        <button className={confirmClass} onClick={onConfirm}>
+          {confirmLabel}
+        </button>
+      </div>
+    </ModalBase>
+  )
+}
+
+export function PromptDialog({
+  isOpen,
+  title,
+  message,
+  onSubmit,
+  onCancel,
+  submitLabel = 'Create',
+  cancelLabel = 'Cancel',
+  placeholder = '',
+  defaultValue = ''
+}) {
+  const [value, setValue] = useState(defaultValue)
+
+  useEffect(() => {
+    if (isOpen) setValue(defaultValue || '')
+  }, [isOpen, defaultValue])
+
+  return (
+    <ModalBase open={isOpen} onClose={onCancel}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (value.trim()) onSubmit && onSubmit(value.trim())
+        }}
+      >
+        <div className="dlg-header">{title}</div>
+        <div className="dlg-body">
+          <p className="dlg-text">{message}</p>
+          <input
+            className="dlg-input"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={placeholder}
+            autoFocus
+          />
+        </div>
+        <div className="dlg-actions">
+          <button type="button" className="dlg-btn dlg-btn-subtle" onClick={onCancel}>
+            {cancelLabel}
+          </button>
+          <button type="submit" className="dlg-btn dlg-btn-primary" disabled={!value.trim()}>
+            {submitLabel}
+          </button>
+        </div>
+      </form>
+    </ModalBase>
   )
 }

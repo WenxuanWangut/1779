@@ -22,7 +22,7 @@ export function UIProvider({ children }){
   return (
     <UIContext.Provider value={value}>
       {children}
-      <ToastContainer position="bottom-right" newestOnTop limit={3} closeButton={false} closeOnClick />
+      <ToastContainer position="bottom-right" newestOnTop limit={3} closeButton={false} closeOnClick autoClose={2000} />
     </UIContext.Provider>
   )
 }
