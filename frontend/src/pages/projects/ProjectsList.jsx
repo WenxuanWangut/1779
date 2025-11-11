@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import Button from '@atlaskit/button/new'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { listProjects, createProject, deleteProject } from '../../api/projects.js'
-import { Link } from 'react-router-dom'
 import SearchBar from '../../components/SearchBar.jsx'
 import EmptyState from '../../components/EmptyState.jsx'
 import useUI from '../../context/UIContext.jsx'
 import { PromptDialog, ConfirmDialog } from '../../components/Dialogs.jsx'
+import ProjectCard from '../../components/ProjectCard.jsx'
 
 export default function ProjectsList(){
   const qc = useQueryClient()
@@ -91,29 +91,14 @@ export default function ProjectsList(){
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {filtered.map(p => (
-            <li key={p.id} style={{
-              display:'flex',
-              alignItems:'center',
-              justifyContent:'space-between',
-              gap:8,
-              padding: '12px',
-              marginBottom: 8,
-              backgroundColor: '#f7f8f9',
-              borderRadius: 4,
-              border: '1px solid #e1e5e9'
-            }}>
-              <Link to={`/projects/${p.id}`} style={{ textDecoration: 'none', flex: 1 }}>
-                <strong>{p.name}</strong>
-              </Link>
-              <Button 
-                appearance="subtle" 
-                spacing="none" 
-                onClick={()=>handleDelete(p)}
-                isDisabled={delMut.isPending && deleteDialog.project?.id === p.id}
-              >
-                {delMut.isPending && deleteDialog.project?.id === p.id ? 'Deleting...' : 'Delete'}
-              </Button>
-            </li>
+            <ProjectCard
+              key={p.id}
+              project={p}
+              to={`/projects/${p.id}`}
+              onDelete={handleDelete}
+              isDeleting={delMut.isPending && deleteDialog.project?.id === p.id}
+              showDescription={false}
+            />
           ))}
         </ul>
       )}
@@ -140,4 +125,3 @@ export default function ProjectsList(){
     </div>
   )
 }
-
