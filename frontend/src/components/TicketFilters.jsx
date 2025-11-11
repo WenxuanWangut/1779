@@ -3,13 +3,13 @@ import Button from '@atlaskit/button'
 import Select from '@atlaskit/select'
 import Textfield from '@atlaskit/textfield'
 import Badge from '@atlaskit/badge'
+import '../styles/filter.css'
 
 export default function TicketFilters({ tickets = [], onFilterChange, filters = {} }) {
   const [searchQuery, setSearchQuery] = useState(filters.search || '')
   const [statusFilter, setStatusFilter] = useState(filters.status || null)
   const [assigneeFilter, setAssigneeFilter] = useState(filters.assignee || null)
 
-  // Get unique assignees from tickets
   const assignees = useMemo(() => {
     const uniqueAssignees = new Set()
     tickets.forEach(ticket => {
@@ -33,6 +33,43 @@ export default function TicketFilters({ tickets = [], onFilterChange, filters = 
     { label: 'Done', value: 'DONE' },
     { label: "Won't Do", value: 'WONT_DO' }
   ]
+
+  const selectStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: 40,
+      height: 40,
+      borderRadius: 10,
+      borderColor: state.isFocused ? '#60a5fa' : '#cbd5e1',
+      boxShadow: state.isFocused ? '0 0 0 3px rgba(59,130,246,0.25)' : 'none',
+      backgroundColor: '#fff',
+      '&:hover': { borderColor: '#60a5fa' }
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '0 8px'
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: 40
+    }),
+    dropdownIndicator: (base) => ({
+      ...base,
+      padding: 6
+    }),
+    clearIndicator: (base) => ({
+      ...base,
+      padding: 6
+    }),
+    menu: (base) => ({
+      ...base,
+      borderRadius: 10,
+      overflow: 'hidden',
+      border: '1px solid #e5e7eb',
+      boxShadow: '0 10px 24px rgba(2,6,23,0.08)',
+      zIndex: 5
+    })
+  }
 
   const handleSearchChange = (e) => {
     const query = e.target.value
@@ -59,65 +96,56 @@ export default function TicketFilters({ tickets = [], onFilterChange, filters = 
 
   const hasActiveFilters = searchQuery || statusFilter?.value || assigneeFilter?.value
 
-  // Calculate filtered ticket count
   const filteredCount = useMemo(() => {
     return tickets.filter(ticket => {
-      const matchesSearch = !searchQuery || 
+      const matchesSearch = !searchQuery ||
         ticket.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ticket.ticket_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ticket.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      
       const matchesStatus = !statusFilter?.value || ticket.status === statusFilter.value
       const matchesAssignee = !assigneeFilter?.value || ticket.assignee?.id === assigneeFilter.value
-
       return matchesSearch && matchesStatus && matchesAssignee
     }).length
   }, [tickets, searchQuery, statusFilter, assigneeFilter])
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexWrap: 'wrap', 
-      gap: 12, 
-      marginBottom: 16,
-      padding: 16,
-      backgroundColor: '#f7f8f9',
-      borderRadius: 8,
-      border: '1px solid #e1e5e9'
-    }}>
-      <div style={{ flex: '1 1 300px', minWidth: 200 }}>
+    <div className="filter-card">
+      <div className="filter-item wide">
         <Textfield
           value={searchQuery}
           onChange={handleSearchChange}
           placeholder="Search tickets..."
-          isCompact
         />
       </div>
-      
-      <div style={{ flex: '0 1 200px', minWidth: 150 }}>
+
+      <div className="filter-item">
         <Select
           value={statusFilter}
           onChange={handleStatusChange}
           options={statusOptions}
           placeholder="Filter by status"
           isSearchable={false}
+          styles={selectStyles}
+          classNamePrefix="tf"
         />
       </div>
 
       {assignees.length > 0 && (
-        <div style={{ flex: '0 1 200px', minWidth: 150 }}>
+        <div className="filter-item">
           <Select
             value={assigneeFilter}
             onChange={handleAssigneeChange}
             options={[{ label: 'All Assignees', value: null }, ...assignees]}
             placeholder="Filter by assignee"
             isSearchable={false}
+            styles={selectStyles}
+            classNamePrefix="tf"
           />
         </div>
       )}
 
       {hasActiveFilters && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="filter-actions">
           <Badge>{filteredCount} tickets</Badge>
           <Button appearance="subtle" onClick={clearFilters} spacing="compact">
             Clear Filters
@@ -127,4 +155,3 @@ export default function TicketFilters({ tickets = [], onFilterChange, filters = 
     </div>
   )
 }
-
