@@ -8,6 +8,7 @@ import useUI from '../../context/UIContext.jsx'
 import SimpleModal from '../../components/SimpleModal.jsx'
 import Lozenge from '@atlaskit/lozenge'
 import Avatar from '@atlaskit/avatar'
+import CommentSection from '../../components/CommentSection.jsx'
 
 const STATUS_COLORS = {
   TODO: 'default',
@@ -154,6 +155,11 @@ export default function TicketDetail(){
             <p style={{margin: 0}}>#{ticket.id}</p>
           </div>
         </div>
+      </div>
+
+      {/* Comments Section */}
+      <div style={{ marginBottom: 16 }}>
+        <CommentSection ticketId={id} />
       </div>
 
       <div style={{display: 'flex', gap: 8, justifyContent: 'flex-end', position: 'relative', zIndex: 1000, pointerEvents: 'auto'}}>
