@@ -55,11 +55,9 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
         }
       }
     }
-    requestAnimationFrame(() => {
-      setIsDragging(false)
-      setActiveDropId(null)
-      setSourceDropId(null)
-    })
+    setIsDragging(false)
+    setActiveDropId(null)
+    setSourceDropId(null)
   }
 
   const handleDragUpdate = (update) => {
@@ -92,25 +90,21 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
           <div style={{ fontWeight: 600, marginBottom: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
             {ticket.ticket_number || ticket.name || `Ticket #${ticket.id}`}
           </div>
-
           {ticket.name && ticket.name !== ticket.ticket_number && (
             <div style={{ fontSize: 14, color: '#666', marginBottom: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               {ticket.name}
             </div>
           )}
-
           {ticket.description && (
             <div style={{ fontSize: 12, color: '#888', marginTop: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               {ticket.description.length > 100 ? `${ticket.description.substring(0, 100)}...` : ticket.description}
             </div>
           )}
-
           {ticket.assignee && (
             <div style={{ fontSize: 12, color: '#666', marginTop: 8, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               Assignee: {ticket.assignee.name || ticket.assignee.email}
             </div>
           )}
-
           <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             <Lozenge appearance={STATUS_COLORS[ticket.status] || 'default'}>
               {STATUS_LABELS[ticket.status] || ticket.status}
@@ -161,7 +155,6 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
             <h4 style={{ margin: 0, fontSize: 16 }}>{STATUS_LABELS[status]}</h4>
             <Badge>{ticketsList.length}</Badge>
           </div>
-
           <Droppable droppableId={status}>
             {(provided) => {
               const isSource = sourceDropId === status

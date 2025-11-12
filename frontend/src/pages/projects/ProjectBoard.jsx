@@ -1,3 +1,4 @@
+// frontend/src/pages/projects/ProjectBoard.jsx
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Button from '@atlaskit/button/new'
@@ -23,9 +24,9 @@ export default function ProjectBoard(){
   const [filters, setFilters] = useState({ search: '', status: null, assignee: null })
   const { pushToast } = useUI()
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (opts = { loading: true }) => {
     try {
-      setLoading(true)
+      if (opts.loading) setLoading(true)
       const [ticketsData, projectData] = await Promise.all([
         listTickets(id),
         getProject(id)
@@ -35,7 +36,7 @@ export default function ProjectBoard(){
     } catch (error) {
       pushToast(`Failed to load data: ${error.response?.data?.message || error.message}`, 'error')
     } finally {
-      setLoading(false)
+      if (opts.loading) setLoading(false)
     }
   }, [id, pushToast])
 
@@ -43,22 +44,18 @@ export default function ProjectBoard(){
     refresh()
   }, [refresh])
 
-  // Filter tickets based on filter state
   const filteredTickets = useMemo(() => {
     return tickets.filter(ticket => {
       const matchesSearch = !filters.search || 
         ticket.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
         ticket.ticket_number?.toLowerCase().includes(filters.search.toLowerCase()) ||
         ticket.description?.toLowerCase().includes(filters.search.toLowerCase())
-      
       const matchesStatus = !filters.status || ticket.status === filters.status
       const matchesAssignee = !filters.assignee || ticket.assignee?.id === filters.assignee
-
       return matchesSearch && matchesStatus && matchesAssignee
     })
   }, [tickets, filters])
 
-  // Real-time Socket.IO integration
   useSocket(id, (event) => {
     if (event.type === 'connect') {
       setSocketConnected(true)
@@ -72,9 +69,7 @@ export default function ProjectBoard(){
       setTickets(prev => [...prev, event.payload])
       pushToast('New ticket created')
     } else if (event.type === 'ticket.updated') {
-      setTickets(prev => prev.map(t => 
-        t.id === event.payload.id ? event.payload : t
-      ))
+      setTickets(prev => prev.map(t => t.id === event.payload.id ? event.payload : t))
       pushToast('Ticket updated')
     } else if (event.type === 'ticket.deleted') {
       setTickets(prev => prev.filter(t => t.id !== event.payload))
@@ -86,21 +81,36 @@ export default function ProjectBoard(){
     setSocketConnected(true)
   }, [])
 
+  function applyLocalMove(prev, { id: ticketId, from, to, oldStatus, newStatus }) {
+    const norm = (s) => s || 'TODO'
+    const groups = { TODO: [], IN_PROGRESS: [], DONE: [], WONT_DO: [] }
+    prev.forEach(t => {
+      const key = norm(t.status)
+      groups[key].push(t)
+    })
+    const fromList = groups[norm(oldStatus)]
+    const idx = fromList.findIndex(t => t.id === ticketId)
+    if (idx === -1) return prev
+    let moving = fromList.splice(idx, 1)[0]
+    if (norm(oldStatus) !== norm(newStatus)) moving = { ...moving, status: newStatus }
+    const toList = groups[norm(newStatus)]
+    const insert = Math.min(Math.max(to, 0), toList.length)
+    toList.splice(insert, 0, moving)
+    return [...groups.TODO, ...groups.IN_PROGRESS, ...groups.DONE, ...groups.WONT_DO]
+  }
+
   async function onReorder({ id: ticketId, from, to, oldStatus, newStatus }){
+    const snapshot = tickets
+    setTickets(prev => applyLocalMove(prev, { id: ticketId, from, to, oldStatus, newStatus }))
     try {
-      // Update status if changed
       if (oldStatus !== newStatus) {
         await updateTicket(ticketId, { status: newStatus })
       }
-      
-      // Reorder within the same column or update position
       await reorderTickets(id, { start: from, end: to })
-      
-      // Refresh to get latest state
-      refresh()
+      refresh({ loading: false })
     } catch (error) {
+      setTickets(snapshot)
       pushToast(`Failed to reorder ticket: ${error.response?.data?.message || error.message}`, 'error')
-      refresh() // Refresh on error to reset UI
     }
   }
 
@@ -109,7 +119,7 @@ export default function ProjectBoard(){
       await createTicket(id, {
         ticket_number: values.ticket_number,
         description: values.description || '',
-        name: values.ticket_number // Use ticket_number as name if name not provided
+        name: values.ticket_number
       })
       setModalOpen(false)
       pushToast('Ticket created successfully')
@@ -130,11 +140,9 @@ export default function ProjectBoard(){
 
   async function onUpdate(values){
     try {
-      // Extract status value if it's an object from Select component
       const statusValue = typeof values.status === 'object' && values.status?.value 
         ? values.status.value 
         : values.status || editingTicket.status
-      
       await updateTicket(editingTicket.id, {
         name: values.ticket_number || editingTicket.name,
         description: values.description || editingTicket.description || '',
@@ -188,7 +196,6 @@ export default function ProjectBoard(){
           <Button appearance="primary" onClick={() => setModalOpen(true)}>New Ticket</Button>
         </div>
       </div>
-      
       {tickets.length > 0 && (
         <TicketFilters 
           tickets={tickets} 
@@ -196,7 +203,6 @@ export default function ProjectBoard(){
           filters={filters}
         />
       )}
-      
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40 }}>
           <p>Loading tickets...</p>
@@ -230,4 +236,3 @@ export default function ProjectBoard(){
     </div>
   )
 }
-
