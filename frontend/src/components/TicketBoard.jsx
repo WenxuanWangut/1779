@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import { AnimatePresence, motion } from 'framer-motion'
 import Lozenge from '@atlaskit/lozenge'
 import Badge from '@atlaskit/badge'
 import Button from '@atlaskit/button/new'
@@ -17,6 +18,44 @@ const STATUS_LABELS = {
   IN_PROGRESS: 'In Progress',
   DONE: 'Done',
   WONT_DO: "Won't Do"
+}
+
+function StatusPill({ status }) {
+  return (
+    <div style={{ position: 'relative', height: 24, display: 'inline-flex', alignItems: 'center' }}>
+      <AnimatePresence initial={false} mode="wait">
+        <motion.div
+          key={status}
+          initial={{ y: 8, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -8, opacity: 0 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          style={{ display: 'inline-block' }}
+        >
+          <Lozenge appearance={STATUS_COLORS[status] || 'default'}>
+            {STATUS_LABELS[status] || status}
+          </Lozenge>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function AnimatedCount({ count }) {
+  return (
+    <AnimatePresence initial={false} mode="popLayout">
+      <motion.div
+        key={count}
+        initial={{ y: -6, opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 6, opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.16, ease: 'easeOut' }}
+        style={{ display: 'inline-block' }}
+      >
+        <Badge>{count}</Badge>
+      </motion.div>
+    </AnimatePresence>
+  )
 }
 
 export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete, onTicketClick }) {
@@ -90,25 +129,27 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
           <div style={{ fontWeight: 600, marginBottom: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
             {ticket.ticket_number || ticket.name || `Ticket #${ticket.id}`}
           </div>
+
           {ticket.name && ticket.name !== ticket.ticket_number && (
             <div style={{ fontSize: 14, color: '#666', marginBottom: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               {ticket.name}
             </div>
           )}
+
           {ticket.description && (
             <div style={{ fontSize: 12, color: '#888', marginTop: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               {ticket.description.length > 100 ? `${ticket.description.substring(0, 100)}...` : ticket.description}
             </div>
           )}
+
           {ticket.assignee && (
             <div style={{ fontSize: 12, color: '#666', marginTop: 8, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               Assignee: {ticket.assignee.name || ticket.assignee.email}
             </div>
           )}
+
           <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-            <Lozenge appearance={STATUS_COLORS[ticket.status] || 'default'}>
-              {STATUS_LABELS[ticket.status] || ticket.status}
-            </Lozenge>
+            <StatusPill status={ticket.status} />
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               {onEdit && (
                 <Button
@@ -139,6 +180,7 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
 
   const renderColumn = (status, ticketsList) => {
     const isActive = activeDropId === status
+    const count = ticketsList.length
     return (
       <div key={status} style={{ width: '100%', minWidth: 0 }}>
         <div
@@ -153,8 +195,9 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h4 style={{ margin: 0, fontSize: 16 }}>{STATUS_LABELS[status]}</h4>
-            <Badge>{ticketsList.length}</Badge>
+            <AnimatedCount count={count} />
           </div>
+
           <Droppable droppableId={status}>
             {(provided) => {
               const isSource = sourceDropId === status
