@@ -5,7 +5,6 @@ import Badge from '@atlaskit/badge'
 import Button from '@atlaskit/button/new'
 import EmptyState from './EmptyState.jsx'
 
-// Ticket status colors
 const STATUS_COLORS = {
   TODO: 'default',
   IN_PROGRESS: 'inprogress',
@@ -23,6 +22,7 @@ const STATUS_LABELS = {
 export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete, onTicketClick }) {
   const [activeDropId, setActiveDropId] = useState(null)
   const [sourceDropId, setSourceDropId] = useState(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   const ticketsByStatus = {
     TODO: tickets.filter(t => t.status === 'TODO' || !t.status),
@@ -32,28 +32,34 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
   }
 
   const handleDragStart = (start) => {
+    setIsDragging(true)
     setSourceDropId(start.source.droppableId)
     setActiveDropId(start.source.droppableId)
   }
 
   const handleDragEnd = (result) => {
-    setActiveDropId(null)
-    setSourceDropId(null)
-    if (!result.destination || !onReorder) return
-    const { source, destination, draggableId } = result
-    const ticket = tickets.find(t => String(t.id) === draggableId)
-    if (!ticket) return
-    const newStatus = destination.droppableId
-    const oldStatus = source.droppableId
-    if (oldStatus !== newStatus || source.index !== destination.index) {
-      onReorder({
-        id: ticket.id,
-        from: source.index,
-        to: destination.index,
-        oldStatus,
-        newStatus
-      })
+    if (result.destination && onReorder) {
+      const { source, destination, draggableId } = result
+      const ticket = tickets.find(t => String(t.id) === draggableId)
+      if (ticket) {
+        const newStatus = destination.droppableId
+        const oldStatus = source.droppableId
+        if (oldStatus !== newStatus || source.index !== destination.index) {
+          onReorder({
+            id: ticket.id,
+            from: source.index,
+            to: destination.index,
+            oldStatus,
+            newStatus
+          })
+        }
+      }
     }
+    requestAnimationFrame(() => {
+      setIsDragging(false)
+      setActiveDropId(null)
+      setSourceDropId(null)
+    })
   }
 
   const handleDragUpdate = (update) => {
@@ -159,7 +165,7 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
           <Droppable droppableId={status}>
             {(provided) => {
               const isSource = sourceDropId === status
-              const showPlaceholder = !(isSource && activeDropId && activeDropId !== status)
+              const hideSourcePlaceholder = isSource && isDragging && (activeDropId === null || activeDropId !== status)
               return (
                 <div
                   ref={provided.innerRef}
@@ -181,7 +187,7 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
                   ) : (
                     ticketsList.map((ticket, index) => renderTicket(ticket, index))
                   )}
-                  {showPlaceholder && provided.placeholder}
+                  {!hideSourcePlaceholder && provided.placeholder}
                 </div>
               )
             }}
@@ -196,7 +202,11 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
   }
 
   return (
-    <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragUpdate={handleDragUpdate}>
+    <DragDropContext
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragUpdate={handleDragUpdate}
+    >
       <div
         style={{
           display: 'grid',
