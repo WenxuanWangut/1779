@@ -12,7 +12,7 @@ class Ticket(models.Model):
     
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(blank=True, default='')
     status = models.CharField(
         max_length=20,
         choices=Status.choices,

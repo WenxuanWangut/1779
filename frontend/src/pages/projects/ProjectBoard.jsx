@@ -115,16 +115,37 @@ export default function ProjectBoard(){
 
   async function onCreate(values){
     try {
+      // Convert status from lowercase to uppercase (todo -> TODO)
+      const statusMap = {
+        'todo': 'TODO',
+        'in_progress': 'IN_PROGRESS',
+        'done': 'DONE',
+        'wont_do': 'WONT_DO'
+      }
+      const statusValue = statusMap[values.status?.toLowerCase()] || 'TODO'
+      
+      // Ensure name is not empty
+      const ticketName = values.ticket_number || values.name || 'Untitled Ticket'
+      
+      // Description is optional (backend allows blank)
+      const ticketDescription = values.description?.trim() || ''
+      
       await createTicket(id, {
-        ticket_number: values.ticket_number,
-        description: values.description || '',
-        name: values.ticket_number
+        name: ticketName,
+        description: ticketDescription,
+        status: statusValue
       })
       setModalOpen(false)
       pushToast('Ticket created successfully')
       refresh()
     } catch (error) {
-      pushToast(`Failed to create ticket: ${error.response?.data?.message || error.message}`, 'error')
+      // Show detailed error message from backend
+      const errorMsg = error.response?.data?.error || 
+                      error.response?.data?.message || 
+                      error.message || 
+                      'Failed to create ticket'
+      pushToast(errorMsg, 'error')
+      console.error('Create ticket error:', error.response?.data || error)
     }
   }
 
@@ -191,7 +212,6 @@ export default function ProjectBoard(){
           </div>
         </div>
         <div style={{display:'flex', gap:8}}>
-          <Button appearance="subtle" onClick={() => navigate(`/projects/${id}/settings`)}>Settings</Button>
           <Button appearance="primary" onClick={() => setModalOpen(true)}>New Ticket</Button>
         </div>
       </div>
