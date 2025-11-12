@@ -106,8 +106,7 @@ export default function ProjectBoard(){
       if (oldStatus !== newStatus) {
         await updateTicket(ticketId, { status: newStatus })
       }
-      await reorderTickets(id, { start: from, end: to })
-      refresh({ loading: false })
+      await reorderTickets(id, { start: from, end: to, status: newStatus })
     } catch (error) {
       setTickets(snapshot)
       pushToast(`Failed to reorder ticket: ${error.response?.data?.message || error.message}`, 'error')

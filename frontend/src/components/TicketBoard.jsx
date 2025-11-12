@@ -1,17 +1,9 @@
 import React, { useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { AnimatePresence, motion } from 'framer-motion'
-import Lozenge from '@atlaskit/lozenge'
 import Badge from '@atlaskit/badge'
 import Button from '@atlaskit/button/new'
 import EmptyState from './EmptyState.jsx'
-
-const STATUS_COLORS = {
-  TODO: 'default',
-  IN_PROGRESS: 'inprogress',
-  DONE: 'success',
-  WONT_DO: 'moved'
-}
 
 const STATUS_LABELS = {
   TODO: 'To Do',
@@ -20,21 +12,63 @@ const STATUS_LABELS = {
   WONT_DO: "Won't Do"
 }
 
+const STATUS_UI = {
+  TODO: { bg: '#f3f4f6', fg: '#111827', border: '#e5e7eb' },
+  IN_PROGRESS: { bg: '#dbeafe', fg: '#1e3a8a', border: '#bfdbfe' },
+  DONE: { bg: '#dcfce7', fg: '#065f46', border: '#bbf7d0' },
+  WONT_DO: { bg: '#f5f3ff', fg: '#5b21b6', border: '#ddd6fe' }
+}
+
 function StatusPill({ status }) {
+  const ui = STATUS_UI[status] || STATUS_UI.TODO
   return (
     <div style={{ position: 'relative', height: 24, display: 'inline-flex', alignItems: 'center' }}>
       <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={status}
-          initial={{ y: 8, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -8, opacity: 0 }}
-          transition={{ duration: 0.18, ease: 'easeOut' }}
-          style={{ display: 'inline-block' }}
+          initial={{ y: 10, opacity: 0, scale: 0.9, filter: 'blur(2px)' }}
+          animate={{ y: 0, opacity: 1, scale: 1, filter: 'blur(0px)', backgroundColor: ui.bg, color: ui.fg, borderColor: ui.border }}
+          exit={{ y: -10, opacity: 0, scale: 0.9, filter: 'blur(2px)' }}
+          transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}
+          style={{
+            position: 'relative',
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '2px 10px',
+            borderRadius: 9999,
+            border: '1px solid',
+            fontSize: 12,
+            fontWeight: 600,
+            lineHeight: 1,
+            overflow: 'hidden'
+          }}
         >
-          <Lozenge appearance={STATUS_COLORS[status] || 'default'}>
+          <motion.span
+            key={'text-'+status}
+            initial={{ x: 8, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -8, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            style={{ position: 'relative', zIndex: 2, whiteSpace: 'nowrap' }}
+          >
             {STATUS_LABELS[status] || status}
-          </Lozenge>
+          </motion.span>
+          <motion.span
+            key={'shine-'+status}
+            initial={{ x: '-120%' }}
+            animate={{ x: '140%' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              width: '40%',
+              background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.35) 50%, rgba(255,255,255,0) 100%)',
+              zIndex: 1,
+              pointerEvents: 'none'
+            }}
+          />
         </motion.div>
       </AnimatePresence>
     </div>
@@ -129,25 +163,21 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
           <div style={{ fontWeight: 600, marginBottom: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
             {ticket.ticket_number || ticket.name || `Ticket #${ticket.id}`}
           </div>
-
           {ticket.name && ticket.name !== ticket.ticket_number && (
             <div style={{ fontSize: 14, color: '#666', marginBottom: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               {ticket.name}
             </div>
           )}
-
           {ticket.description && (
             <div style={{ fontSize: 12, color: '#888', marginTop: 4, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               {ticket.description.length > 100 ? `${ticket.description.substring(0, 100)}...` : ticket.description}
             </div>
           )}
-
           {ticket.assignee && (
             <div style={{ fontSize: 12, color: '#666', marginTop: 8, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
               Assignee: {ticket.assignee.name || ticket.assignee.email}
             </div>
           )}
-
           <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             <StatusPill status={ticket.status} />
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -197,7 +227,6 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
             <h4 style={{ margin: 0, fontSize: 16 }}>{STATUS_LABELS[status]}</h4>
             <AnimatedCount count={count} />
           </div>
-
           <Droppable droppableId={status}>
             {(provided) => {
               const isSource = sourceDropId === status
