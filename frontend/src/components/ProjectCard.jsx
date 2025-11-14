@@ -16,9 +16,9 @@ export default function ProjectCard({ project, to, onDelete, isDeleting, showDes
       border: '1px solid #e1e5e9',
       transition: 'background-color 0.2s'
     }}>
-      <Link to={to} style={{ textDecoration: 'none', flex: 1 }}>
+      <Link to={to} style={{ textDecoration: 'none', flex: 1, color: 'inherit' }}>
         <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
-          <strong style={{fontSize: 16}}>{project.name}</strong>
+          <strong style={{fontSize: 16, color: '#172B4D'}}>{project.name}</strong>
           {showDescription && project.description && (
             <span style={{color: '#666', fontSize: 14}}>{project.description}</span>
           )}

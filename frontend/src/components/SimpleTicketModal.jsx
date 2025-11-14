@@ -68,11 +68,11 @@ export default function SimpleTicketModal({ isOpen = false, initial = {}, onClos
             <form {...formProps} data-ticket-form>
               <Field 
                 name="ticket_number" 
-                label="Ticket Number" 
+                label="Ticket Name" 
                 defaultValue={safeInitial.ticket_number || safeInitial.name || ''} 
                 isRequired
               >
-                {({ fieldProps }) => <Textfield {...fieldProps} placeholder="Enter ticket number" />}
+                {({ fieldProps }) => <Textfield {...fieldProps} placeholder="Enter ticket name" />}
               </Field>
               <Field name="description" label="Description" defaultValue={safeInitial.description || ''}>
                 {({ fieldProps }) => (

@@ -173,11 +173,9 @@ export default function TicketBoard({ tickets = [], onReorder, onEdit, onDelete,
               {ticket.description.length > 100 ? `${ticket.description.substring(0, 100)}...` : ticket.description}
             </div>
           )}
-          {ticket.assignee && (
-            <div style={{ fontSize: 12, color: '#666', marginTop: 8, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-              Assignee: {ticket.assignee.name || ticket.assignee.email}
-            </div>
-          )}
+          <div style={{ fontSize: 12, color: '#666', marginTop: 8, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+            Assignee: {ticket.assignee ? (ticket.assignee.name || ticket.assignee.email) : <span style={{color: '#999'}}>Unassigned</span>}
+          </div>
           <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             <StatusPill status={ticket.status} />
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>

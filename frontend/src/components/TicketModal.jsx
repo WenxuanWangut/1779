@@ -67,7 +67,7 @@ export default function TicketModal({ isOpen, onClose, onSubmit, initial = {} })
             <form onSubmit={handleSubmit}>
               <div className="dlg-header">{initial?.id ? 'Edit Ticket' : 'New Ticket'}</div>
               <div className="dlg-body">
-                <label className="dlg-label">Ticket Number</label>
+                <label className="dlg-label">Ticket Name</label>
                 <input
                   className="dlg-input"
                   value={ticketNumber}

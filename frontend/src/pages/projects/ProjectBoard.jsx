@@ -230,8 +230,6 @@ export default function ProjectBoard(){
         <TicketBoard 
           tickets={filteredTickets} 
           onReorder={onReorder}
-          onEdit={onEdit}
-          onDelete={handleDeleteClick}
           onTicketClick={handleTicketClick}
         />
       )}

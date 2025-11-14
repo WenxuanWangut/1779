@@ -103,7 +103,7 @@ export default function TicketDetail(){
             else if (ticket?.project?.id) navigate(`/projects/${ticket.project.id}`)
             else navigate(-1)   // final fallback
             }}>← Back</Button>
-          <h2 style={{margin: 0}}>Ticket #{ticket.id}</h2>
+          <h2 style={{margin: 0}}>{ticket.name || 'Untitled Ticket'}</h2>
           <Lozenge appearance={STATUS_COLORS[ticket.status] || 'default'}>
             {STATUS_LABELS[ticket.status] || ticket.status}
           </Lozenge>
@@ -117,11 +117,6 @@ export default function TicketDetail(){
         border: '1px solid #e1e5e9',
         marginBottom: 16
       }}>
-        <div style={{marginBottom: 24}}>
-          <h3 style={{margin: '0 0 8px 0', fontSize: 14, color: '#666'}}>Name</h3>
-          <p style={{margin: 0, fontSize: 18, fontWeight: 600}}>{ticket.name}</p>
-        </div>
-
         {ticket.description && (
           <div style={{marginBottom: 24}}>
             <h3 style={{margin: '0 0 8px 0', fontSize: 14, color: '#666'}}>Description</h3>
@@ -137,9 +132,9 @@ export default function TicketDetail(){
             </Lozenge>
           </div>
 
-          {ticket.assignee && (
-            <div>
-              <h3 style={{margin: '0 0 8px 0', fontSize: 14, color: '#666'}}>Assignee</h3>
+          <div>
+            <h3 style={{margin: '0 0 8px 0', fontSize: 14, color: '#666'}}>Assignee</h3>
+            {ticket.assignee ? (
               <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
                 <Avatar
                   name={ticket.assignee.name || ticket.assignee.email}
@@ -147,24 +142,17 @@ export default function TicketDetail(){
                 />
                 <span>{ticket.assignee.name || ticket.assignee.email}</span>
               </div>
-            </div>
-          )}
-
-          <div>
-            <h3 style={{margin: '0 0 8px 0', fontSize: 14, color: '#666'}}>Ticket ID</h3>
-            <p style={{margin: 0}}>#{ticket.id}</p>
+            ) : (
+              <span style={{color: '#999'}}>Unassigned</span>
+            )}
           </div>
+
         </div>
       </div>
 
-      {/* Comments Section */}
-      <div style={{ marginBottom: 16 }}>
-        <CommentSection ticketId={id} />
-      </div>
-
-      <div style={{display: 'flex', gap: 8, justifyContent: 'flex-end', position: 'relative', zIndex: 1000, pointerEvents: 'auto'}}>
+      <div style={{display: 'flex', gap: 12, justifyContent: 'flex-end', marginBottom: 24, position: 'relative', zIndex: 1000, pointerEvents: 'auto'}}>
         <Button 
-          appearance="subtle" 
+          appearance="primary" 
           onClick={() => {
             console.log('Edit button clicked')
             if (activeModal === 'delete') {
@@ -177,6 +165,7 @@ export default function TicketDetail(){
             }
           }}
           disabled={isClosing}
+          style={{ padding: '12px 24px', fontSize: '16px', fontWeight: 600 }}
         >
           Edit Ticket
         </Button>
@@ -194,9 +183,15 @@ export default function TicketDetail(){
             }
           }}
           disabled={isClosing}
+          style={{ padding: '10px 20px', fontSize: '16px' }}
         >
           Delete Ticket
         </Button>
+      </div>
+
+      {/* Comments Section */}
+      <div style={{ marginBottom: 16 }}>
+        <CommentSection ticketId={id} />
       </div>
 
       {/* Only render one modal at a time */}
