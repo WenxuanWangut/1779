@@ -5,6 +5,55 @@ from .models import Ticket, User, Project
 from .serializers import TicketSerializer, UserSerializer
 from .auth import authenticate_request, create_token, delete_token, get_user_from_token
 
+# Signup token - in production, this should be in environment variables
+SIGNUP_TOKEN = "secret-signup-token-2025"
+
+
+@api_view(['POST'])
+def signup(request):
+    """
+    Register a new user with email, password, name, and signup token.
+    """
+    email = request.data.get('email')
+    password = request.data.get('password')
+    name = request.data.get('name')
+    signup_token = request.data.get('signup_token')
+    
+    # Validate required fields
+    if not all([email, password, name, signup_token]):
+        return Response(
+            {'error': 'Email, password, name, and signup_token are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Check if user already exists
+    if User.objects.filter(email=email).exists():
+        return Response(
+            {'error': 'User with this email already exists'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Verify signup token
+    if signup_token != SIGNUP_TOKEN:
+        return Response(
+            {'error': 'Invalid signup token'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Create the user
+    user = User.objects.create(
+        email=email,
+        password=password,  # In production, use proper password hashing
+        name=name
+    )
+    
+    # Generate token and return user data
+    token = create_token(user)
+    return Response({
+        'token': token,
+        'user': UserSerializer(user).data
+    }, status=status.HTTP_201_CREATED)
+
 
 @api_view(['POST'])
 def login(request):

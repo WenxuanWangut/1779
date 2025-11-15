@@ -3,6 +3,7 @@ from . import ticket_views, project_views, comment_views
 
 urlpatterns = [
     # Authentication
+    path('signup', ticket_views.signup, name='signup'),
     path('login', ticket_views.login, name='login'),
     path('logout', ticket_views.logout, name='logout'),
     
