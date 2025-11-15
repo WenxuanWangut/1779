@@ -33,6 +33,18 @@ class Command(BaseCommand):
         else:
             self.stdout.write(f'  User already exists: {user2.email}')
         
+        user3, created3 = User.objects.get_or_create(
+            email='zyjnflsic@gmail.com',
+            defaults={
+                'name': 'Crown',
+                'password': 'password789'
+            }
+        )
+        if created3:
+            self.stdout.write(self.style.SUCCESS(f'✓ Created user: {user3.email}'))
+        else:
+            self.stdout.write(f'  User already exists: {user3.email}')
+        
         # Create test projects using get_or_create
         project1, created = Project.objects.get_or_create(
             name='ECE1779 Final Project',
@@ -64,6 +76,7 @@ class Command(BaseCommand):
             ('Add authentication', 'Implement user authentication and authorization', Ticket.Status.TODO, project1, user2),
             ('Deploy to production', 'Set up CI/CD pipeline and deploy the application', Ticket.Status.TODO, project1, user1),
             ('Add real-time notifications', 'Implement WebSocket support for real-time updates', Ticket.Status.WONT_DO, project2, None),
+            ('Write technical documentation', 'Document the API endpoints and deployment process', Ticket.Status.IN_PROGRESS, project1, user3),
         ]
         
         tickets = []
@@ -84,7 +97,7 @@ class Command(BaseCommand):
                 self.stdout.write(f'  Ticket already exists: {ticket.name}')
         
         # Create test comments
-        ticket1, ticket2, ticket3, ticket4, ticket5, ticket6 = tickets
+        ticket1, ticket2, ticket3, ticket4, ticket5, ticket6, ticket7 = tickets
         
         comments_data = [
             (ticket1, user1, 'Repository initialized with basic structure'),
@@ -94,6 +107,8 @@ class Command(BaseCommand):
             (ticket3, user2, 'Looks good! Can you also add rate limiting?'),
             (ticket4, user2, 'Should we use JWT or session-based auth?'),
             (ticket4, user1, 'I think token-based would be better for our use case'),
+            (ticket7, user3, 'Starting with API documentation. Will use OpenAPI/Swagger format.'),
+            (ticket7, user1, 'Great! Please also include deployment instructions.'),
         ]
         
         for ticket, commentor, content in comments_data:

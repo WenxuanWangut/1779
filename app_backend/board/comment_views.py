@@ -4,7 +4,10 @@ from rest_framework.response import Response
 from .models import Comment, Ticket
 from .serializers import CommentSerializer
 from .auth import authenticate_request
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
+API_KEY = "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"
 
 @api_view(['GET'])
 @authenticate_request
@@ -54,7 +57,28 @@ def create_comment(request, ticket_id):
         commentor=request.user,
         content=content.strip()
     )
-    
+
+    # Sending email with the truncated comment
+    comment_words = content.strip().split()
+    truncated_comment = ' '.join(comment_words[:10])
+    if len(comment_words) > 10:
+        truncated_comment += '...'
+
+    message = Mail(
+        from_email='ticket-update@cloud-collab.com',
+        to_emails=ticket.assignee.email,
+        subject='New comment on your ticket',
+        html_content=f'<strong>{request.user.name}</strong> commented on your ticket <strong>{ticket.name}</strong>:<br><br>"{truncated_comment}"',
+    )
+    try:
+        sg = SendGridAPIClient(API_KEY)
+        response = sg.send(message)
+        print(response.status_code)
+        print(response.body)
+        print(response.headers)
+    except Exception as e:
+        print(e.message)
+
     serializer = CommentSerializer(comment)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
