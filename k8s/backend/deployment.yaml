@@ -28,6 +28,12 @@ spec:
               value: "8000"
             - name: WEB_CONCURRENCY
               value: "1"
+            - name: SENDGRID_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sendgrid-secret
+                  key: SENDGRID_API_KEY
+                  optional: true
           readinessProbe:
             httpGet:
               path: /healthz

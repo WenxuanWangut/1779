@@ -6,8 +6,14 @@ from .serializers import CommentSerializer
 from .auth import authenticate_request
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+import os
+import logging
 
-API_KEY = "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"
+# Get SendGrid API key from environment variable
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @authenticate_request
@@ -58,26 +64,39 @@ def create_comment(request, ticket_id):
         content=content.strip()
     )
 
-    # Sending email with the truncated comment
-    comment_words = content.strip().split()
-    truncated_comment = ' '.join(comment_words[:10])
-    if len(comment_words) > 10:
-        truncated_comment += '...'
+    # Send email notification if ticket has an assignee
+    if ticket.assignee:
+        # Check if SendGrid API key is configured
+        if not SENDGRID_API_KEY:
+            logger.warning("⚠️ SENDGRID_API_KEY not set - email notification skipped")
+        else:
+            # Truncate comment content to 10 words
+            comment_words = content.strip().split()
+            truncated_comment = ' '.join(comment_words[:10])
+            if len(comment_words) > 10:
+                truncated_comment += '...'
 
-    message = Mail(
-        from_email='ticket-update@cloud-collab.com',
-        to_emails=ticket.assignee.email,
-        subject='New comment on your ticket',
-        html_content=f'<strong>{request.user.name}</strong> commented on your ticket <strong>{ticket.name}</strong>:<br><br>"{truncated_comment}"',
-    )
-    try:
-        sg = SendGridAPIClient(API_KEY)
-        response = sg.send(message)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
-    except Exception as e:
-        print(e.message)
+            message = Mail(
+                from_email='ticket-update@cloud-collab.com',
+                to_emails=ticket.assignee.email,
+                subject='New comment on your ticket',
+                html_content=f'<strong>{request.user.name}</strong> commented on your ticket <strong>{ticket.name}</strong>:<br><br>"{truncated_comment}"',
+            )
+            try:
+                logger.info(f"📧 Sending email to {ticket.assignee.email}")
+                logger.debug(f"API Key: {SENDGRID_API_KEY[:20]}..." if SENDGRID_API_KEY else "Not set")
+                
+                sg = SendGridAPIClient(SENDGRID_API_KEY)
+                response = sg.send(message)
+                
+                logger.info(f"✅ Email sent successfully! Status: {response.status_code}")
+                logger.debug(f"Response body: {response.body}")
+                logger.debug(f"Response headers: {response.headers}")
+            except Exception as e:
+                logger.error(f"❌ Failed to send email: {str(e)}")
+                logger.exception(e)  # This logs the full traceback
+    else:
+        logger.info(f"ℹ️ Ticket {ticket.id} has no assignee - email notification skipped")
 
     serializer = CommentSerializer(comment)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
