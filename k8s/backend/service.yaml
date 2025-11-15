@@ -6,6 +6,9 @@ metadata:
     kubernetes.digitalocean.com/healthcheck-protocol: "http"
     kubernetes.digitalocean.com/healthcheck-path: "/healthz"
     kubernetes.digitalocean.com/healthcheck-port: "8000"
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "8000"
 spec:
   type: ClusterIP
   selector:

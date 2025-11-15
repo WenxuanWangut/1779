@@ -34,6 +34,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'backend.metrics.PrometheusMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
