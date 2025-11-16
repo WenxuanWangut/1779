@@ -6,7 +6,7 @@ from .serializers import TicketSerializer, UserSerializer
 from .auth import authenticate_request, create_token, delete_token, get_user_from_token
 
 # Signup token - in production, this should be in environment variables
-SIGNUP_TOKEN = "secret-signup-token-2025"
+SIGNUP_TOKEN = "ECE1779-2025"
 
 
 @api_view(['POST'])

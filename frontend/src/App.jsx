@@ -28,7 +28,7 @@ export default function App(){
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/register" element={token ? <Navigate to="/" replace /> : <Register />} />
       
       {/* Protected routes */}
       <Route path="/" element={<PrivateRoute><AppShell /></PrivateRoute>}>

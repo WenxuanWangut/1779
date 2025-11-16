@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import Button from '@atlaskit/button/new'
 import Textfield from '@atlaskit/textfield'
 import useAuth from '../../hooks/useAuth.js'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import useUI from '../../context/UIContext.jsx'
 import { Eye, EyeOff } from 'lucide-react'
 import '../../styles/auth.css'
@@ -98,6 +98,15 @@ export default function Login(){
             >
               {submitting ? 'Logging in...' : 'Login'}
             </Button>
+          </div>
+
+          <div style={{textAlign: 'center', marginTop: 16}}>
+            <p style={{fontSize: 14, color: '#666', margin: 0}}>
+              Don't have an account?{' '}
+              <Link to="/register" style={{color: '#2563eb', textDecoration: 'none'}}>
+                Register here
+              </Link>
+            </p>
           </div>
         </form>
       </motion.div>

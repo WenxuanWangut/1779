@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { logout as logoutAPI } from '../api/auth.js'
+import { logout as logoutAPI, signup as signupAPI } from '../api/auth.js'
 import client from '../api/client'
 
 const AuthContext = createContext(null)
@@ -40,6 +40,17 @@ export function AuthProvider({ children }){
     localStorage.setItem('user', JSON.stringify(userData))
     return userData
   }
+
+  const signup = async (email, password, name, signup_token) => {
+    const response = await signupAPI(email, password, name, signup_token)
+    // signupAPI already returns {token, user} from .then(r=>r.data)
+    const { token: newToken, user: userData } = response
+    setToken(newToken)
+    setUser(userData)
+    localStorage.setItem('token', newToken)
+    localStorage.setItem('user', JSON.stringify(userData))
+    return userData
+  }
   
   const logout = async () => {
     try {
@@ -56,7 +67,7 @@ export function AuthProvider({ children }){
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, setUser, login, logout, loading }}>
+    <AuthContext.Provider value={{ token, user, setUser, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )
