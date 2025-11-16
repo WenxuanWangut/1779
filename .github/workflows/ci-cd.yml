@@ -295,7 +295,7 @@ jobs:
             TP=$(kubectl -n "$KUBE_NS" get pod -l app=app-backend -o jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}' 2>/dev/null || true)
             [ -n "$TP" ] && kubectl -n "$KUBE_NS" delete pod $TP --force --grace-period=0 || true
           }
-          for i in $(seq 1 10); do
+          for i in $(seq 1 3); do
             set +e
             kubectl -n "$KUBE_NS" rollout status deploy/app-backend --timeout=120s
             rc=$?
@@ -318,7 +318,7 @@ jobs:
             TP=$(kubectl -n "$KUBE_NS" get pod -l app=app-frontend -o jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}' 2>/dev/null || true)
             [ -n "$TP" ] && kubectl -n "$KUBE_NS" delete pod $TP --force --grace-period=0 || true
           }
-          for i in $(seq 1 10); do
+          for i in $(seq 1 3); do
             set +e
             kubectl -n "$KUBE_NS" rollout status deploy/app-frontend --timeout=120s
             rc=$?
