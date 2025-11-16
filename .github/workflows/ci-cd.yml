@@ -48,6 +48,8 @@ jobs:
     defaults:
       run:
         working-directory: app_backend
+    env:
+      USE_SQLITE: "true"
     steps:
       - uses: actions/checkout@v4
 
