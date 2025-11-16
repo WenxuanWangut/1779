@@ -67,11 +67,11 @@ jobs:
       - run: python manage.py collectstatic --noinput
 
       - name: Build backend image (local)
-        run: docker build -t app-backend:test .
+        run: docker build --build-arg USE_SQLITE=true -t app-backend:test .
 
       - name: Run backend container
         run: |
-          docker run -d --rm -p 8000:8000 --name app_backend app-backend:test
+          docker run -d --rm -p 8000:8000 -e USE_SQLITE=true --name app_backend app-backend:test
           for i in $(seq 1 40); do \
             curl -fsS -X OPTIONS http://127.0.0.1:8000/login && break; \
             sleep 2; \
