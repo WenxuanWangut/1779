@@ -71,7 +71,7 @@ jobs:
 
       - name: Run backend container
         run: |
-          docker run -d --rm -p 8000:8000 --name app_backend app-backend:test
+          docker run -d --rm -p 8000:8000 --name app_backend -e USE_SQLITE=true app-backend:test
           for i in $(seq 1 40); do \
             curl -fsS -X OPTIONS http://127.0.0.1:8000/login && break; \
             sleep 2; \
