@@ -207,9 +207,6 @@ export default function ProjectBoard(){
             <Button appearance="subtle" onClick={() => navigate('/projects')}>← Back to projects</Button>
             <h3 style={{ margin: 0 }}>{project ? project.name : 'Loading...'}</h3>
           </div>
-          <div style={{ fontSize: 12, color: socketConnected ? '#0E8750' : '#999', marginLeft: 40 }}>
-            {socketConnected ? '● Real-time updates active' : '○ Connecting...'}
-          </div>
         </div>
         <div style={{display:'flex', gap:8}}>
           <Button appearance="primary" onClick={() => setModalOpen(true)}>New Ticket</Button>

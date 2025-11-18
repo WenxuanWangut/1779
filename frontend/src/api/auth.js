@@ -9,3 +9,17 @@ export const signup = (email, password, name, signup_token) => {
   }
   return client.post('/signup', payload).then(r=>r.data)
 }
+
+/**
+ * Search for users/assignees by name prefix
+ * @param {string} prefix - Name prefix to search for (minimum 1 character)
+ * @returns {Promise<Array>} Array of user objects
+ */
+export const searchAssignees = (prefix) => {
+  if (!prefix || prefix.trim().length === 0) {
+    // If no prefix, use a common character to get some users
+    // This is a workaround since the API requires a prefix
+    prefix = 'a'
+  }
+  return client.get(`/assignees?prefix=${encodeURIComponent(prefix.trim())}`).then(r => r.data)
+}
