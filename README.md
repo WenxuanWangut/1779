@@ -1,15 +1,219 @@
-# Project Setup and Running Guide
+# CloudCollab – ECE1779 Final Project
 
-This is a full-stack ticket management application with a Django backend and React frontend.
+**Current Deployment**: https://cloudcollab-ufhp2.ondigitalocean.app/
 
-## Prerequisites
+CloudCollab is a lightweight, stateful, cloud-native ticket management and collaboration tool for small teams (student project groups, research labs, small startups). It provides a simple Kanban-style board backed by a PostgreSQL database, containerized with Docker, orchestrated with Kubernetes, and deployed on DigitalOcean with persistent storage and monitoring.
 
-- **Python 3.9+** (for backend)
-- **Node.js** (for frontend - check `frontend/package.json` for version requirements)
-- **pip** (Python package manager)
-- **npm** or **yarn** (Node package manager)
+---
 
-## Quick Start
+## Team Information
+
+| Name         | Student ID  | Preferred Email                    |
+| ------------ | ----------- | ---------------------------------- |
+| Yu Zhang     | 1002935229  | yuqiu.zhang@mail.utoronto.ca      |
+| Wenxuan Wang | 1004975927  | wenxuan.wang@mail.utoronto.ca     |
+| Xiao Sun     | 1005975090  | xiao.sun@mail.utoronto.ca         |
+| Xingda Jiang | 1007170525  | xingda.jiang@mail.utoronto.ca     |
+
+## Motivation
+
+### Problem
+
+Small teams (course project groups, research labs, student clubs, small startups) often need a simple way to:
+
+- Track tasks and bugs
+- See who is working on what
+- Coordinate deadlines and priorities
+- Keep updates and discussion linked to specific work items
+
+Existing tools like Jira or Asana are powerful but:
+
+- Overkill for small teams
+- Hard to self-host or customize
+- Lock data into third-party SaaS
+- Can be slow or complex to configure
+
+### Why CloudCollab?
+
+CloudCollab focuses on:
+
+- **Simplicity** – a clean ticket board with just the core concepts: projects, tickets, assignees, statuses, and comments.
+- **Stateful cloud deployment** – a real PostgreSQL database running in the cloud (DigitalOcean) with persistent storage, not a toy in-memory app.
+- **Ownership and privacy** – teams can host it themselves, keep control of their data, and still enjoy modern DevOps practices (CI/CD, monitoring).
+- **Alignment with course goals** – it showcases Docker, PostgreSQL, persistent storage, Kubernetes, and monitoring as required in ECE1779.
+
+---
+
+
+## Objectives
+
+Our main objectives were:
+
+1. **Build a usable ticket management application**  
+   - Projects with boards of tickets  
+   - Ticket statuses (To Do / In Progress / Done / Won’t Do)  
+   - Assignees, descriptions, and comments
+
+2. **Run it as a stateful cloud-native application**  
+   - Use PostgreSQL as the primary data store  
+   - Persist state across restarts and deployments using DigitalOcean volumes  
+   - Avoid any in-memory or ephemeral storage for core data
+
+3. **Use the required cloud technologies from the course**  
+   - Containerize services using Docker  
+   - Use Kubernetes (minikube locally, DigitalOcean Kubernetes in the cloud) for orchestration  
+   - Deploy to DigitalOcean with persistent storage  
+   - Integrate monitoring using DigitalOcean Monitoring plus Prometheus/Grafana dashboards
+
+4. **Implement at least two advanced features**  
+   - CI/CD pipeline with GitHub Actions  
+   - Email notifications via SendGrid for ticket activity
+
+5. **Demonstrate a clear DevOps workflow**  
+   - From local development to cloud deployment  
+   - With health checks, metrics, and reproducible setup
+
+
+## Technical Stack
+
+- **Languages & Frameworks**
+  - Python (Django / DRF backend)
+  - JavaScript / JSX (React frontend)
+  - YAML (Kubernetes, GitHub Actions, Prometheus)
+  - Dockerfiles for all main services
+
+- **Backend**
+  - Django + DRF with token-based authentication
+  - PostgreSQL as the production database
+  - SQLite only for local development when `USE_SQLITE=true`
+
+- **Frontend**
+  - React + Vite
+  - React Query for API calls and caching
+  - Simple, responsive UI for boards, tickets, and dashboards
+
+- **Containerization & Local Dev**
+  - Docker images for backend (`app_backend/Dockerfile`) and frontend (`frontend/Dockerfile`)
+  - Optional Docker Compose setup for running app + database locally
+
+- **State & Storage**
+  - PostgreSQL for all relational data
+  - Persistent storage via DigitalOcean managed PostgreSQL and underlying volumes
+
+- **Deployment & Orchestration**
+  - DigitalOcean as the cloud provider
+  - Kubernetes (minikube for local, DigitalOcean Kubernetes in production)
+
+- **Monitoring**
+  - DigitalOcean Monitoring for cluster/node metrics
+  - Prometheus scraping backend `/metrics`
+  - Compatible with Grafana dashboards
+
+---
+
+## Features
+
+### Core Technical Requirements
+
+CloudCollab satisfies all core technical requirements:
+
+- **Containerization & Local Development**
+  - Backend and frontend both packaged as Docker images
+  - Optional Docker Compose setup for local multi-container runs (app + database)
+
+- **State Management**
+  - Uses PostgreSQL as the main database
+  - Production deployment relies on persistent storage so data survives restarts
+
+- **Deployment Provider**
+  - Deployed to **DigitalOcean**, using:
+    - DigitalOcean Kubernetes
+    - DigitalOcean managed PostgreSQL
+    - DigitalOcean Monitoring
+
+- **Orchestration**
+  - **Kubernetes** used for both local (minikube) and cloud (DigitalOcean Kubernetes) environments
+  - Deployments, Services, and PersistentVolumeClaims for the stateful backend
+
+- **Monitoring and Observability**
+  - DigitalOcean Monitoring enabled for system metrics
+  - Backend exposes `/metrics` for Prometheus
+  - Metrics can be visualized with Grafana dashboards
+
+### Advanced Features
+
+CloudCollab implements the following advanced features:
+
+1. **CI/CD Pipeline**
+   - GitHub Actions workflow builds backend and frontend Docker images
+   - Images are pushed to GitHub Container Registry (GHCR)
+   - Pipeline can be extended to apply Kubernetes manifests for automated deployment
+
+2. **Email Notifications**
+   - SendGrid integration using `SENDGRID_API_KEY`
+   - Ticket assignees receive email notifications when new comments are added
+   - Emails contain a short summary and a link back to the ticket
+
+3. **Security Enhancements**
+   - Token-based authentication for all backend APIs; unauthenticated requests are rejected
+   - Per-user ownership enforced for tickets and comments to prevent cross-user data access
+   - HTTPS termination via the DigitalOcean load balancer, encrypting client–cluster traffic
+   - Sensitive values such as `DATABASE_URL` and `SENDGRID_API_KEY` stored in Kubernetes Secrets and injected as environment variables, not hard-coded
+
+
+## User Guide
+
+### Accessing the Application
+
+- **Deployment URL**  
+  `https://cloudcollab-ufhp2.ondigitalocean.app`
+
+> If the deployment domain changes, update this URL in the README.
+
+### Login
+
+For demo purposes, local development uses seeded demo accounts. Example:
+
+- `alice@example.com` / `password123`
+- `bob@example.com` / `password456`
+
+In production, accounts are created through the signup flow (if enabled) or by admin commands.
+
+### Main User Flow
+
+1. **Login**
+   - Visit the deployment URL
+   - Enter your email and password
+   - On success, you are redirected to the dashboard
+
+2. **Dashboard**
+   - View an overview of projects and recent tickets
+   - Navigate to a specific project board
+
+3. **Projects**
+   - List all projects you have access to
+   - Select a project to open its ticket board
+
+4. **Ticket Board**
+   - View tickets grouped by status (To Do, In Progress, Done, Won’t Do)
+   - Create a new ticket by filling in title, description, and assignee
+   - Click a ticket to open the detail modal and edit fields
+   - Change status via dropdown or drag-and-drop (depending on current UI state)
+
+5. **Comments**
+   - Open a ticket detail view
+   - Add comments to discuss the task
+   - If email is configured, assignees receive notifications when new comments are added
+
+6. **Health & Metrics (for operators)**
+   - `/healthz`: check if the backend is healthy
+   - `/metrics`: view raw Prometheus metrics (typically scraped by Prometheus, not used directly by end users)
+
+Make sure these images are committed to the repository so they render correctly on GitHub.
+
+
+## Development Guide
+**Deployment URL:** https://cloudcollab-ufhp2.ondigitalocean.app/
 
 ### Option 1: Run Both Services Locally (Development)
 
@@ -71,135 +275,52 @@ docker build -t frontend-app .
 docker run -p 3000:3000 frontend-app
 ```
 
-## Configuration
 
-### Backend Configuration
+## Video Demo
 
-- Default port: `8000`
-- Database: SQLite (file: `app_backend/db.sqlite3`)
-- CORS: Enabled for all origins (development mode)
-- Test data: Auto-seeded on server startup
+The video demo (1–5 minutes) shows:
 
-### Frontend Configuration
+- Logging in and navigating the dashboard
+- Creating and updating tickets on a project board
+- Adding comments and triggering email notifications (if configured)
+- Kubernetes workloads running on DigitalOcean
+- Monitoring dashboards (DigitalOcean Monitoring and Grafana)
 
-- Default port: `3000`
-- API Base URL: `http://localhost:8000` (can be overridden with `VITE_API_BASE` environment variable)
-- Proxy: Frontend proxies `/api/*` requests to backend at `http://localhost:8000`
+**Video URL:**  
+`<PLACEHOLDER – insert YouTube / Google Drive / Dropbox link here>`
 
-### Environment Variables
 
-**Backend:**
-- `DJANGO_DEBUG`: Set to `'true'` for debug mode (default: `'False'`)
-- `DJANGO_ALLOWED_HOSTS`: Comma-separated list of allowed hosts (default: `'*'`)
+## Individual Contributions
 
-**Frontend:**
-- `VITE_API_BASE`: Backend API base URL (default: `'http://localhost:8000'`)
+- **Yu Zhang**
 
-## Test Users
+- **Wenxuan Wang**
 
-The application automatically seeds test users on startup:
+- **Xiao Sun**
 
-- **Alice**: `alice@example.com` / `password123`
-- **Bob**: `bob@example.com` / `password456`
+- **Xingda Jiang**
+  - Frontend QOL update and bugfix
+  - Kubernetes manifests and Kustomize overlays (`k8s/`)
+  - Kubernetes deployment
+  - CI/CD pipeline
+  - Integration of Prometheus metrics and health endpoints
 
-## Accessing the Application
 
-1. Open your browser and navigate to `http://localhost:3000`
-2. Log in with one of the test users above
-3. You can create projects, tickets, and comments
+## Lessons Learned and Concluding Remarks
 
-## API Testing
+- **Kubernetes vs. simpler options.**  
+  Kubernetes has more moving parts than Docker Compose or Swarm, but using minikube locally and DigitalOcean Kubernetes in production gave us hands-on experience with real-world orchestration patterns.
 
-You can test the backend API directly using the test page:
+- **Instrumentation early is worth it.**  
+  Adding `/metrics` and Prometheus middleware early made performance and debugging easier. We could see traffic patterns and spot issues instead of guessing.
 
-```bash
-# Open the test API page
-cd app_backend
-# On Windows:
-start test_api.html
-# On Mac/Linux:
-open test_api.html
-# Or use your browser to open the file directly
-```
+- **Separation of concerns helps iteration.**  
+  Keeping a clean separation between the REST API and the React frontend allowed each side to evolve independently with a stable contract.
 
-## Project Structure
+- **CI/CD reduces friction.**  
+  Automating image builds and pushes with GitHub Actions removed a lot of manual steps and made deployments more predictable.
 
-```
-.
-├── app_backend/          # Django backend
-│   ├── backend/         # Django project settings
-│   ├── board/           # Main app with models, views, serializers
-│   ├── manage.py        # Django management script
-│   ├── requirements.txt # Python dependencies
-│   └── README.md        # Backend-specific documentation
-├── frontend/            # React frontend
-│   ├── src/            # Source code
-│   ├── package.json    # Node dependencies
-│   └── vite.config.js  # Vite configuration
-└── k8s/                # Kubernetes deployment files
-```
+- **Real-time features need full-stack support.**  
+  We initially planned WebSocket-based real-time updates. The frontend hook is ready, but we decided to keep the backend HTTP-only for this iteration to ensure stability and on-time delivery. This showed us how important it is to balance scope and reliability.
 
-## Troubleshooting
-
-### Backend Issues
-
-- **Port 8000 already in use**: Change the port with `python manage.py runserver 8001`
-- **Database errors**: Run `python manage.py migrate` to apply migrations
-- **Module not found**: Ensure you've installed requirements with `pip install -r requirements.txt`
-
-### Frontend Issues
-
-- **Port 3000 already in use**: Vite will automatically try the next available port
-- **Cannot connect to backend**: 
-  - Ensure backend is running on port 8000
-  - Check that CORS is enabled in backend settings
-  - Verify `VITE_API_BASE` environment variable if using custom backend URL
-- **Module not found**: Run `npm install` in the frontend directory
-
-### Connection Issues
-
-- Ensure both servers are running
-- Check that backend is accessible at `http://localhost:8000`
-- Verify frontend can reach backend (check browser console for errors)
-
-## Development Commands
-
-### Backend
-
-```bash
-# Run migrations
-python manage.py migrate
-
-# Create migrations (after model changes)
-python manage.py makemigrations
-
-# Seed test data
-python manage.py seed_data
-
-# Run development server
-python manage.py runserver
-```
-
-### Frontend
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Run linter
-npm run lint
-```
-
-## Production Deployment
-
-For production deployment, see the `k8s/` directory for Kubernetes configurations, or refer to the Dockerfiles in each service directory.
-
+Overall, CloudCollab delivers a focused, stateful, cloud-native application that meets all core technical requirements of ECE1779 and demonstrates two advanced features (CI/CD and email notifications), while solving a real collaboration problem faced by small teams.
