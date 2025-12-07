@@ -214,10 +214,16 @@ export default function TicketDetail(){
                 ? values.status.value 
                 : values.status || ticket.status
               
+              // Extract assignee_id
+              const assigneeId = values.assignee_id !== undefined 
+                ? values.assignee_id 
+                : (ticket.assignee?.id || null)
+              
               await updateMut.mutateAsync({
                 name: values.ticket_number || ticket.name,
                 description: values.description || ticket.description || '',
-                status: statusValue
+                status: statusValue,
+                assignee_id: assigneeId
               })
             } catch (error) {
               console.error('Error updating ticket:', error)

@@ -31,8 +31,14 @@ spec:
             - name: SENDGRID_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: sendgrid-secret
+                  name: backend-secrets
                   key: SENDGRID_API_KEY
+                  optional: true
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: DATABASE_URL
                   optional: true
           readinessProbe:
             httpGet:

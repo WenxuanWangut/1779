@@ -104,6 +104,29 @@ def logout(request):
 
 @api_view(['GET'])
 @authenticate_request
+def search_assignees(request):
+    """
+    Search for users by name prefix.
+    Query parameter: prefix (required)
+    Example: GET /assignees?prefix=Ali
+    """
+    prefix = request.GET.get('prefix', '').strip()
+    
+    if not prefix:
+        return Response(
+            {'error': 'prefix query parameter is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Search users whose name starts with the prefix (case-insensitive)
+    users = User.objects.filter(name__istartswith=prefix)
+    serializer = UserSerializer(users, many=True)
+    
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@authenticate_request
 def get_tickets(request):
     """
     Get all tickets grouped by status (authenticated).

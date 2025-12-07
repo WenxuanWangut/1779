@@ -7,6 +7,9 @@ urlpatterns = [
     path('login', ticket_views.login, name='login'),
     path('logout', ticket_views.logout, name='logout'),
     
+    # Users/Assignees
+    path('assignees', ticket_views.search_assignees, name='search_assignees'),
+    
     # Tickets
     path('tickets', ticket_views.get_tickets, name='get_tickets'),
     path('tickets/create', ticket_views.create_ticket, name='create_ticket'),
