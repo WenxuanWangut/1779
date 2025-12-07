@@ -989,8 +989,9 @@ We are proud of what we've accomplished and grateful for the learning experience
 
 ---
 
-**Project Repository**: https://github.com/WenxuanWangut/1779/tree/main
+**Project Repository**: https://github.com/WenxuanWangut/1779
 
 **Deployment URL**: https://cloudcollab-ufhp2.ondigitalocean.app/
+
 
 
