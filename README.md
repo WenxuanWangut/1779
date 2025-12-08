@@ -11,7 +11,7 @@
 | ------------ | ----------- |---------------------------------| ---------------- |
 | Yu Zhang     | 1002935229  | corvinus.zhang@mail.utoronto.ca | CorvinusZY   |
 | Wenxuan Wang | 1004975927  | wenxuanrz.wang@mail.utoronto.ca | WenxuanWangut    |
-| Xiao Sun     | 1005975090  | xiao.sun@mail.utoronto.ca       | sun-xiao   |
+| Xiao Sun     | 1005975090  | xiaocn.sun@mail.utoronto.ca       | sun-xiao   |
 | Xingda Jiang | 1007170525  | jasonj.jiang@mail.utoronto.ca   | penguin-madagascar   |
 
 ---
