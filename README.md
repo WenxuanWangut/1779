@@ -994,7 +994,7 @@ We are proud of what we've accomplished and grateful for the learning experience
 A video demonstration of the Local Guide application is available at:
 - **Location**: https://youtu.be/iWGYpR4Y3m8
 - **Platform**: YouTube
-- **Content**: 
+- **Content**: In this video, we briefly introduced the structure and features of our overall project. Then we demonstrated the full process of how a new user can register, create new project and ticket, add a comment, etc. on our platform.
 ---
 **Project Repository**: https://github.com/WenxuanWangut/1779
 
