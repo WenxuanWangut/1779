@@ -7,7 +7,7 @@
 
 ## Team Information
 
-=======
+
 | Name         | Student ID  | Preferred Email                 |
 | ------------ | ----------- |---------------------------------|
 | Yu Zhang     | 1002935229  | yuqiu.zhang@mail.utoronto.ca    |
