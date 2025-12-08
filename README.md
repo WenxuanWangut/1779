@@ -1,8 +1,8 @@
 # CloudCollab – ECE1779 Final Project Report
----
-**Demo Video**: https://youtu.be/iWGYpR4Y3m8
 
+**Demo Video**: https://youtu.be/iWGYpR4Y3m8  
 **Live Deployment**: https://cloudcollab-ufhp2.ondigitalocean.app/
+
 ---
 
 ## Team Information
@@ -10,7 +10,7 @@
 | Name         | Student ID  | Preferred Email                    |
 | ------------ | ----------- | ---------------------------------- |
 | Yu Zhang     | 1002935229  | yuqiu.zhang@mail.utoronto.ca      |
-| Wenxuan Wang | 1004975927  | wenxuan.wang@mail.utoronto.ca     |
+| Wenxuan Wang | 1004975927  | wenxuanrz.wang@mail.utoronto.ca     |
 | Xiao Sun     | 1005975090  | xiao.sun@mail.utoronto.ca         |
 | Xingda Jiang | 1007170525  | xingda.jiang@mail.utoronto.ca     |
 
