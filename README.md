@@ -7,12 +7,12 @@
 
 ## Team Information
 
-| Name         | Student ID  | Preferred Email                    |
-| ------------ | ----------- | ---------------------------------- |
-| Yu Zhang     | 1002935229  | yuqiu.zhang@mail.utoronto.ca      |
-| Wenxuan Wang | 1004975927  | wenxuanrz.wang@mail.utoronto.ca     |
-| Xiao Sun     | 1005975090  | xiao.sun@mail.utoronto.ca         |
-| Xingda Jiang | 1007170525  | xingda.jiang@mail.utoronto.ca     |
+| Name         | Student ID  | Preferred Email                 |
+| ------------ | ----------- |---------------------------------|
+| Yu Zhang     | 1002935229  | yuqiu.zhang@mail.utoronto.ca    |
+| Wenxuan Wang | 1004975927  | wenxuanrz.wang@mail.utoronto.ca |
+| Xiao Sun     | 1005975090  | xiao.sun@mail.utoronto.ca       |
+| Xingda Jiang | 1007170525  | jasonj.jiang@mail.utoronto.ca   |
 
 ---
 
