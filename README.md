@@ -1,19 +1,20 @@
 # CloudCollab – ECE1779 Final Project Report
----
+
 **Demo Video**: https://youtu.be/iWGYpR4Y3m8
 
 **Live Deployment**: https://cloudcollab-ufhp2.ondigitalocean.app/
 ---
 
+
 ## Team Information
 
+| Name         | Student ID  | Preferred Email                     | GitHub ID        |
+| ------------ | ----------- | ----------------------------------- | ---------------- |
+| Yu Zhang     | 1002935229  | yuqiu.zhang@mail.utoronto.ca       | _to be filled_   |
+| Wenxuan Wang | 1004975927  | wenxuanrz.wang@mail.utoronto.ca    | WenxuanWangut    |
+| Xiao Sun     | 1005975090  | xiao.sun@mail.utoronto.ca          | _to be filled_   |
+| Xingda Jiang | 1007170525  | xingda.jiang@mail.utoronto.ca      | _to be filled_   |
 
-| Name         | Student ID  | Preferred Email                 |
-| ------------ | ----------- |---------------------------------|
-| Yu Zhang     | 1002935229  | yuqiu.zhang@mail.utoronto.ca    |
-| Wenxuan Wang | 1004975927  | wenxuanrz.wang@mail.utoronto.ca |
-| Xiao Sun     | 1005975090  | xiaocn.sun@mail.utoronto.ca     |
-| Xingda Jiang | 1007170525  | jasonj.jiang@mail.utoronto.ca   |
 ---
 
 ## Motivation
@@ -989,7 +990,13 @@ The application is production-ready, well-documented, and demonstrates proficien
 We are proud of what we've accomplished and grateful for the learning experience this project provided. CloudCollab represents not just a course project, but a practical tool that could genuinely help small teams collaborate more effectively.
 
 ---
+### Video Demo
 
+A video demonstration of the Local Guide application is available at:
+- **Location**: https://youtu.be/iWGYpR4Y3m8
+- **Platform**: YouTube
+- **Content**: 
+---
 **Project Repository**: https://github.com/WenxuanWangut/1779
 
 **Deployment URL**: https://cloudcollab-ufhp2.ondigitalocean.app/
