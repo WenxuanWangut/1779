@@ -9,7 +9,7 @@
 
 | Name         | Student ID  | Preferred Email                 | GitHub ID        |
 | ------------ | ----------- |---------------------------------| ---------------- |
-| Yu Zhang     | 1002935229  | yuqiu.zhang@mail.utoronto.ca    | CorvinusZY   |
+| Yu Zhang     | 1002935229  | corvinus.zhang@mail.utoronto.ca | CorvinusZY   |
 | Wenxuan Wang | 1004975927  | wenxuanrz.wang@mail.utoronto.ca | WenxuanWangut    |
 | Xiao Sun     | 1005975090  | xiao.sun@mail.utoronto.ca       | sun-xiao   |
 | Xingda Jiang | 1007170525  | jasonj.jiang@mail.utoronto.ca   | penguin-madagascar   |
